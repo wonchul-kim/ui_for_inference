@@ -23,6 +23,7 @@ export default function CustomSlider({title, value, handleSliderChange, handleIn
             value={typeof value === 'number' ? value : 0}
             onChange={handleSliderChange}
             aria-labelledby="input-slider"
+            max={255}
           />
         </Grid>
         <Grid item>
@@ -32,9 +33,9 @@ export default function CustomSlider({title, value, handleSliderChange, handleIn
             onChange={handleInputChange}
             onBlur={handleBlur}
             inputProps={{
-              step: 10,
+              step: 1,
               min: 0,
-              max: 100,
+              max: 255,
               type: 'number',
               'aria-labelledby': 'input-slider',
             }}

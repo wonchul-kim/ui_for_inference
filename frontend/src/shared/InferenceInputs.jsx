@@ -13,15 +13,17 @@ const Input = styled(MuiInput)`
   width: 42px;
 `;
 
-export default function InferenceInputs({jsonData}) {
-  const [value, setValue] = React.useState(30);
+export default function InferenceInputs({confidenceThres, handleConfidenceThres, jsonData}) {
+  const [value, setValue] = React.useState(confidenceThres);
 
   const handleSliderChange = (event, newValue) => {
     setValue(newValue);
+    handleConfidenceThres(newValue)
   };
 
   const handleInputChange = (event) => {
     setValue(event.target.value === '' ? 0 : Number(event.target.value));
+    handleConfidenceThres(event.target.value === '' ? 0 : Number(event.target.value))
   };
 
   const handleBlur = () => {
@@ -41,7 +43,7 @@ export default function InferenceInputs({jsonData}) {
             handleInputChange={handleInputChange}
             handleBlur={handleBlur} 
         />
-        <CustomSlider
+        {/* <CustomSlider
             title={"IoU"}
             value={value}
             handleSliderChange={handleSliderChange}
@@ -54,7 +56,7 @@ export default function InferenceInputs({jsonData}) {
             handleSliderChange={handleSliderChange}
             handleInputChange={handleInputChange}
             handleBlur={handleBlur} 
-        />
+        /> */}
 
         <ShowJson jsonData={jsonData} />
     </div>

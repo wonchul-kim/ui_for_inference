@@ -20,11 +20,19 @@ const Item = styled(Paper)(({ theme }) => ({
 export default function InferencePage() {
   const [uploadedImage, setUploadedImage] = useState(null);
   const [imageDataUrl, setImageDataUrl] = useState(null);
-  const [segmentationDataUrl, setSegmentationDataUrl] = useState(null);
+  const [segmentationDataUrl, setSegmentationDataUrl] = useState({});
+  const [imageShape, setImageShape] = useState(null);
+  const [confidenceThres, setConfidenceThres] = useState(0);
+  const [filteredImage, setFilteredImage] = useState({});
 
-  useEffect(() => {
-    console.log("imageDataUrl: ", imageDataUrl)
-  }, [imageDataUrl])
+  const handleConfidenceThres = (confThres) => {
+    setConfidenceThres(confThres);
+    var tmp = {};
+    Object.entries(segmentationDataUrl).forEach(([key, val]) => {
+      tmp[key] = applyThresholdToEncodedImage(val, confThres);
+    })
+    setFilteredImage(tmp);
+  }
 
   const handleUploadImage = (image) => {
     setUploadedImage(image);
@@ -37,10 +45,13 @@ export default function InferencePage() {
     };
     reader.readAsDataURL(image);
 
-    sendImageToBackend(image).then(async (segmentationResult) => {
+    sendImageToBackend(image).then(async (preds) => {
       try {
         // Display the segmentation result
-        setSegmentationDataUrl(`data:image/png;base64,${await segmentationResult}`);
+        Object.entries(preds).forEach(([key, val]) => {
+          setSegmentationDataUrl(prev => ({...prev , [key]: val}));
+          setFilteredImage(prev => ({...prev , [key]: val}));
+        })
       } catch (error) {
         console.error('Error:', error.message);
       }
@@ -63,7 +74,8 @@ export default function InferencePage() {
         // Handle successful response from the backend (if needed)
         const result = await response.json();
         console.log('Backend response:', result);
-        
+        setImageShape(result.shape);
+
         return result.prediction; // Assuming the result has a property 'segmentation_prediction'
 
       } else {
@@ -74,6 +86,46 @@ export default function InferencePage() {
       // Handle network or other errors
       console.error('Error:', error.message);
     }
+  };
+
+  function arraysAreEqual(array1, array2) {
+    if (array1.length !== array2.length) {
+        return false;
+    }
+
+    for (let i = 0; i < array1.length; i++) {
+        if (array1[i] !== array2[i]) {
+            return false;
+        }
+    }
+
+    return true;
+  }
+
+  const applyThresholdToEncodedImage = (encodedImage, threshold) => {
+    // Decode the base64-encoded image
+    const decodedImage = atob(encodedImage);
+    const imageArray = new Uint8Array(decodedImage.length);
+    console.log(">>> ", decodedImage.length)
+    for (let i = 0; i < decodedImage.length; i++) {
+      imageArray[i] = decodedImage.charCodeAt(i);
+    }
+    const uniqueValues = [...new Set(imageArray)];
+    // console.log(">>> UNIQUE: ", uniqueValues)
+    // Assuming the image is in RGBA format
+    const pixels = new Uint8Array(imageArray.buffer);
+    // console.log('original: ', pixels)
+    // console.log('original-threshold: ', threshold, pixels.includes(threshold))
+    const thresholdedPixels = pixels.map(value => (value < 0) ? 0 : value);
+    // console.log('thresholdedPixels: ', thresholdedPixels)
+    // console.log('thresholdedPixels-threshold: ', threshold, thresholdedPixels.includes(threshold))
+    // console.log(">>>>>>>>>>>>> ", arraysAreEqual(pixels,thresholdedPixels))
+
+    // Encode the modified pixel array
+    // const thresholdedImage = btoa(String.fromCharCode.apply(null, thresholdedPixels));
+    const thresholdedImage = btoa(String.fromCharCode(...thresholdedPixels));
+
+    return thresholdedImage;
   };
 
   const sampleJson = {
@@ -103,10 +155,30 @@ export default function InferencePage() {
                   alt="Uploaded"
                   className="preview-image"
                 />
-                {segmentationDataUrl && (
+                {/* {segmentationDataUrl && (
+                  Object.entries(segmentationDataUrl).forEach(([key, val]) => {
+                    <img
+                      src={val}
+                      alt="Segmentation"
+                      className="overlay-image"
+                    />
+                  })
+                )} */}
+                {/* {Object.keys(segmentationDataUrl).length !== 0 && 
+                  Object.entries(segmentationDataUrl).map(([key, val]) => (
                   <img
-                    src={segmentationDataUrl}
-                    alt="Segmentation"
+                    // key={key}
+                    src={val}
+                    alt={key}
+                    className="overlay-image"
+                    onError={(e) => console.error(`Error loading image for key ${key}:`, e)}
+                  />
+                ))} */}
+                {Object.keys(filteredImage).length !== 0 && (
+                  <img
+                    // key={key}
+                    src={`data:image/png;base64,${filteredImage['channel1']}`}
+                    alt='channel1'
                     className="overlay-image"
                   />
                 )}
@@ -114,14 +186,34 @@ export default function InferencePage() {
             </div>
           )}
         </div>
-
-          <Item>
-            <DisplayImage />   
-          </Item>
+          {uploadedImage && Object.keys(filteredImage).length !== 0 && (
+            Object.entries(filteredImage).map(([key, val]) => (
+              <div className="preview-container">
+              <h2 className="preview-title">{key}</h2>
+              <div className="preview-image-container">
+                <img
+                  src={imageDataUrl}
+                  alt="Uploaded"
+                  className="preview-image"
+                />
+                <img
+                  key={key}
+                  src={`data:image/png;base64,${val}`}
+                  alt={key}
+                  className="overlay-image"
+                  onError={(e) => console.error("Error loading channel image: ", e)}
+                />
+              </div>
+              </div>
+                ))
+            )
+          }
           </Grid>
           <Grid item xs={4}>
           <Item>
-            <InferenceInputs jsonData={sampleJson}/>    
+            <InferenceInputs confidenceThres={confidenceThres}
+                              handleConfidenceThres={handleConfidenceThres}
+                              jsonData={sampleJson}/>    
           </Item>
         </Grid>
     </Grid>

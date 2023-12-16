@@ -4,7 +4,7 @@ import numpy as np
 import base64
 import cv2
 
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import StreamingResponse
@@ -28,14 +28,15 @@ app.add_middleware(TrustedHostMiddleware, allowed_hosts=["localhost"])
 async def upload_image(image: UploadFile = File(...)):
     image = byte_to_array(image)
 
-    pred = predict(image)
-    cv2.imwrite('/home/wonchul/github/inference/backend/outputs/pred.png', pred)
+    # pred = predict(image)
+    channels = get_dummy(image)
 
     if image is not None:
         return {"status": f"Image ({image.shape}) uploaded successfully",
-                "prediction": encode_image(pred)}
+                "prediction": encode_image(channels),
+                "shape": image.shape}
     else:
-        return {"status": "Failed to upload Image"}
+        return {"status": "Failed to upload Image", 'prediction': None, 'shape': None}
 
 
 def byte_to_array(image: UploadFile):
@@ -45,27 +46,59 @@ def byte_to_array(image: UploadFile):
     return image_array
 
 def predict(image):
-    h, w, ch = image.shape
-    print(">>>> ", h, w, ch)
-
-    pred = np.zeros(image.shape)
-    pred[:1000, 0:1000, 0] = 0.5
-    pred[:1000, 0:1000, 1] = 0.5
-    pred[:1000, 0:1000, 2] = 0.5
-    pred[:, :, 3] = 1
-
-    pred *= 255
-
-    print(">>>>>>>>>>>>>>>>> ", pred.shape)
+    pred = get_dummy(image)
 
     return pred.astype(np.uint8)
 
-def encode_image(segmentation_prediction):
-    image = Image.fromarray(segmentation_prediction)
-    buffered = BytesIO()
-    image.save(buffered, format="PNG")
-    return base64.b64encode(buffered.getvalue()).decode("utf-8")
+def encode_image(channels):
+    if isinstance(channels, dict):
+        res = {}
+        for key, val in channels.items():
+            image = Image.fromarray(val)
+            buffered = BytesIO()
+            image.save(buffered, format="PNG")
+            
+            res[key] = base64.b64encode(buffered.getvalue()).decode("utf-8")
 
+        return res
+    else:        
+        image = Image.fromarray(channels)
+        buffered = BytesIO()
+        image.save(buffered, format="PNG")
+        
+        return base64.b64encode(buffered.getvalue()).decode("utf-8")
+
+def get_dummy(image):
+    h, w, ch = image.shape
+    print("image shape: ", image.shape)
+    channel1 = np.zeros((h, w))
+    channel2 = np.zeros((h, w))
+    channel3 = np.zeros((h, w))
+    channel4 = np.zeros((h, w))
+    channel5 = np.zeros((h, w))
+
+    channel1[0:1000, 0:1000] = 0.3
+    channel2[500:1500, 500:1500] = 0.3
+    channel2[:, -500:] = 0.6
+    channel3[-1000:, -1000:] = 0.3
+    channel4[-1000:, :] = 0.3
+    channel5[:1000, :] = 0.6
+
+    channel1 = (np.stack([channel1, channel1, channel1, np.ones((h, w))], axis=-1)*255).astype(np.uint8)
+    channel2 = (np.stack([channel2, channel2, channel2, np.ones((h, w))], axis=-1)*255).astype(np.uint8)
+    channel3 = (np.stack([channel3, channel3, channel3, np.ones((h, w))], axis=-1)*255).astype(np.uint8)
+    channel4 = (np.stack([channel4, channel4, channel4, np.ones((h, w))], axis=-1)*255).astype(np.uint8)
+    channel5 = (np.stack([channel5, channel5, channel5, np.ones((h, w))], axis=-1)*255).astype(np.uint8)
+
+    print(">>> Check: ", np.where(channel1==1))
+    print(np.unique(channel1))
+    print(channel1.shape)
+
+    # channels = {'channel1': channel1, 'channel2': channel2, 'channel3': channel3, 
+    #             'channel4': channel4, 'channel5': channel5, }
+    channels = {'channel1': channel1, 'channel2': channel2}
+
+    return channels
 
 if __name__ == "__main__":
     import uvicorn
