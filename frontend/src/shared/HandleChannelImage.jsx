@@ -17,7 +17,7 @@ const Item = styled(Paper)(({ theme }) => ({
 }));
   
 export default function HandleChannelImage({srcImage, resImage, confidenceThres,
-                                       handleConfidenceThres, jsonData})
+                                       handleConfidenceThres, maxValue, jsonData})
 {
   return (
     <Box sx={{ flexGrow: 1 }} className='container'>
@@ -51,6 +51,7 @@ export default function HandleChannelImage({srcImage, resImage, confidenceThres,
                         title={key}
                         confidenceThres={confidenceThres[key]}
                         handleConfidenceThres={handleConfidenceThres}
+                        maxValue={maxValue}
                       />
                     </Item>
                 </Grid>

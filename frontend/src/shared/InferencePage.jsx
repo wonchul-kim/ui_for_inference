@@ -40,7 +40,7 @@ export default function InferencePage() {
   const handleConfidenceThres = (name, confThres) => {
     setConfidenceThres(prevConfidences => ({...prevConfidences, [name]: confThres}))
 
-    if (task === 'segmentatoin'){
+    if (task === 'segmentation'){
       applyThresholdToEncodedImage(segmentationResult[name], confThres,
                       Object.keys(confidenceThres).indexOf(name))
       .then((filteredSrc) => {

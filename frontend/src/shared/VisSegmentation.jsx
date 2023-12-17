@@ -57,6 +57,7 @@ export default function VisSegmentation({title, srcImage, resImage, confidenceTh
                       title={key}
                       confidenceThres={val}
                       handleConfidenceThres={handleConfidenceThres}
+                      maxValue={maxValue}
                     />
                   ))
                 )}
@@ -80,6 +81,7 @@ export default function VisSegmentation({title, srcImage, resImage, confidenceTh
                             confidenceThres={confidenceThres} 
                             handleConfidenceThres={handleConfidenceThres}
                             jsonData={jsonData}
+                            maxValue={maxValue}
         />
     </Box>
   );

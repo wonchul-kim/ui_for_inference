@@ -15,7 +15,7 @@ export default function CustomSlider({title, value, handleSliderChange,
                           maxValue}) 
 {
   return (
-    <Box sx={{ width: 400}}>
+    <Box sx={{ width: 300}}>
       <Grid container spacing={2} alignItems="center">
        {title && title !== "" && (
           <Grid item>

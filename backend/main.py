@@ -27,26 +27,26 @@ app.add_middleware(TrustedHostMiddleware, allowed_hosts=["localhost"])
 async def upload_image(image: UploadFile = File(...)):
     image = byte_to_array(image)
 
-    # channels = get_seg_dummy(image)
-    # if image is not None:
-    #     return {"status": f"Image ({image.shape}) uploaded successfully",
-    #             "task": 'segmentation',
-    #             "prediction": encode_image(channels),
-    #             "shape": image.shape}
-    # else:
-    #     return {"status": "Failed to upload Image", 'task': 'segmentation', 'prediction': None, 'shape': None}
-
-    preds = get_det_dummy(image)
-
+    channels = get_seg_dummy(image)
     if image is not None:
-        return JSONResponse(content={"status": f"Image ({image.shape}) uploaded successfully",
-                "task": 'detection',
-                "prediction": preds,
-                "shape": image.shape})
+        return {"status": f"Image ({image.shape}) uploaded successfully",
+                "task": 'segmentation',
+                "prediction": encode_image(channels),
+                "shape": image.shape}
     else:
-        return JSONResponse(content={"status": "Failed to upload Image", 
-            "task": 'detection',
-            'prediction': None, 'shape': None})
+        return {"status": "Failed to upload Image", 'task': 'segmentation', 'prediction': None, 'shape': None}
+
+    # preds = get_det_dummy(image)
+
+    # if image is not None:
+    #     return JSONResponse(content={"status": f"Image ({image.shape}) uploaded successfully",
+    #             "task": 'detection',
+    #             "prediction": preds,
+    #             "shape": image.shape})
+    # else:
+    #     return JSONResponse(content={"status": "Failed to upload Image", 
+    #         "task": 'detection',
+    #         'prediction': None, 'shape': None})
 
 
 def byte_to_array(image: UploadFile):
