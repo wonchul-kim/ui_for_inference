@@ -15,9 +15,9 @@ const Input = styled(MuiInput)`
 export default function InferenceInputs({title, confidenceThres, handleConfidenceThres}) {
   const [value, setValue] = React.useState(confidenceThres);
 
-  React.useEffect(() => {
-    console.log("title: ", title)
-  })
+  // React.useEffect(() => {
+  //   console.log("title: ", title)
+  // })
   
   const handleSliderChange = (event, newValue) => {
     setValue(newValue);

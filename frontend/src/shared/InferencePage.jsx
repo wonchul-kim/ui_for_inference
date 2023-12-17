@@ -26,24 +26,30 @@ export default function InferencePage() {
   const [confidenceThres, setConfidenceThres] = useState({});
   const [filteredImage, setFilteredImage] = useState({});
 
-  useEffect(() => {
-    console.log("confidences: ", confidenceThres)
-  }, [confidenceThres])
-
   const handleConfidenceThres = (name, confThres) => {
     console.log(">>> handleConfidence: ", name, confThres)
     setConfidenceThres(prevConfidences => ({...prevConfidences, [name]: confThres}))
-    var tmp = {};
-    Object.entries(segmentationDataUrl).forEach(([key, val]) => {
-      tmp[key] = applyThresholdToEncodedImage(val, confThres)
-      .then((filteredSrc) => {
-        // console.log("Filtered Image Source:", filteredSrc);
-        setFilteredImage(prev => ({...prev , [key]: filteredSrc}));
-      })
-      .catch((error) => {
-        console.error("Error processing image:", error);
-      });
+
+    applyThresholdToEncodedImage(segmentationDataUrl[name], confThres)
+    .then((filteredSrc) => {
+      // console.log("Filtered Image Source:", filteredSrc);
+      setFilteredImage(prev => ({...prev , [name]: filteredSrc}));
     })
+    .catch((error) => {
+      console.error("Error processing image:", error);
+    });
+
+    // var tmp = {};
+    // Object.entries(segmentationDataUrl).forEach(([key, val]) => {
+    //   tmp[key] = applyThresholdToEncodedImage(val, confThres)
+    //   .then((filteredSrc) => {
+    //     // console.log("Filtered Image Source:", filteredSrc);
+    //     setFilteredImage(prev => ({...prev , [key]: filteredSrc}));
+    //   })
+    //   .catch((error) => {
+    //     console.error("Error processing image:", error);
+    //   });
+    // })
   }
 
   const handleUploadImage = (image) => {
