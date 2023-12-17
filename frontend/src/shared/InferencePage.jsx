@@ -117,15 +117,17 @@ export default function InferencePage() {
         context.drawImage(img, 0, 0, img.width, img.height);
   
         const imageData = context.getImageData(0, 0, img.width, img.height);
-        const data = imageData.data;
+        const data = new Uint8Array(imageData.data.buffer);
   
         // Apply threshold filter to color channels
+        const thresholdValue = threshold * 3; // Precompute the threshold value
         for (let i = 0; i < data.length; i += 4) {
-          if (data[i] < threshold) {
-            data[i] = data[i + 1] = data[i + 2] = 255; // Set color channels to 0
+          const pixelValue = data[i] + data[i + 1] + data[i + 2];
+          if (pixelValue < thresholdValue) {
+            data[i] = data[i + 1] = data[i + 2] = 255; // Set color channels to 255 (white)
           }
         }
-
+  
         context.putImageData(imageData, 0, 0);
   
         // Convert the canvas to base64
@@ -138,6 +140,7 @@ export default function InferencePage() {
       };
     });
   };
+  
   
   const jsonData = {
       key1: 'value1',
