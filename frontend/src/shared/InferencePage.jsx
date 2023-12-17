@@ -8,8 +8,7 @@ import './styles.css'; // Import your stylesheet
 import UploadImage from './UploadImage';
 import DisplayImage from './DisplayImage';
 import InferenceInputs from './InferenceInputs';
-import FilteredImage from './FilteredImage';
-
+import VisSegmentation from './VisSegmentation';
 
 const Item = styled(Paper)(({ theme }) => ({
   backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
@@ -106,20 +105,6 @@ export default function InferencePage() {
     }
   };
 
-  function arraysAreEqual(array1, array2) {
-    if (array1.length !== array2.length) {
-        return false;
-    }
-
-    for (let i = 0; i < array1.length; i++) {
-        if (array1[i] !== array2[i]) {
-            return false;
-        }
-    }
-
-    return true;
-  }
-
   const applyThresholdToEncodedImage = (base64Image, threshold) => {
     return new Promise((resolve, reject) => {
       const img = new Image();
@@ -157,7 +142,7 @@ export default function InferencePage() {
     });
   };
   
-  const sampleJson = {
+  const jsonData = {
       key1: 'value1',
       key2: 'value2',
       key3: {
@@ -169,84 +154,18 @@ export default function InferencePage() {
   return (
     <Box sx={{ flexGrow: 1 }} className='container'>
     <Grid container spacing={2}>
-        <Grid item xs={8}>
+      <Grid item xs={12}>
         <h1 className="title">Image Upload and Processing</h1>
-
         <div className="upload-section">
           <UploadImage onUploadImage={handleUploadImage} />
-
-          {uploadedImage && (
-            <div className="preview-container">
-              <h2 className="preview-title">Uploaded Image Preview</h2>
-              <div className="preview-image-container">
-                <img
-                  src={imageDataUrl}
-                  alt="Uploaded"
-                  className="preview-image"
-                />
-                {/* {segmentationDataUrl && (
-                  Object.entries(segmentationDataUrl).forEach(([key, val]) => {
-                    <img
-                      src={val}
-                      alt="Segmentation"
-                      className="overlay-image"
-                    />
-                  })
-                )} */}
-                {/* {Object.keys(segmentationDataUrl).length !== 0 && 
-                  Object.entries(segmentationDataUrl).map(([key, val]) => (
-                  <img
-                    // key={key}
-                    src={val}
-                    alt={key}
-                    className="overlay-image"
-                    onError={(e) => console.error(`Error loading image for key ${key}:`, e)}
-                  />
-                ))} */}
-                {Object.keys(filteredImage).length !== 0 && (
-                  <img
-                    // key={key}
-                    src={filteredImage['channel1']}
-                    // src={`data:image/png;base64,${filteredImage['channel1']}`}
-                    alt='channel1'
-                    className="overlay-image"
-                  />
-                )}
-              </div>
-            </div>
-          )}
         </div>
-          {uploadedImage && Object.keys(filteredImage).length !== 0 && (
-            Object.entries(filteredImage).map(([key, val]) => (
-              <div className="preview-container">
-              <h2 className="preview-title">{key}</h2>
-              <div className="preview-image-container">
-                <img
-                  src={imageDataUrl}
-                  alt="Uploaded"
-                  className="preview-image"
-                />
-                <img
-                  key={key}
-                  // src={`data:image/png;base64,${val}`}
-                  src={val}
-                  alt={key}
-                  className="overlay-image"
-                  onError={(e) => console.error("Error loading channel image: ", e)}
-                />
-              </div>
-              </div>
-                ))
-            )
-          }
-          </Grid>
-          <Grid item xs={4}>
-          <Item>
-            <InferenceInputs confidenceThres={confidenceThres}
-                              handleConfidenceThres={handleConfidenceThres}
-                              jsonData={sampleJson}/>    
-          </Item>
-        </Grid>
+      </Grid>
+      <VisSegmentation title="All Channels"
+                      srcImage={imageDataUrl} resImage={filteredImage}
+                      confidenceThres={confidenceThres} 
+                      handleConfidenceThres={handleConfidenceThres}
+                      jsonData={jsonData}
+      />
     </Grid>
     </Box>
   );
