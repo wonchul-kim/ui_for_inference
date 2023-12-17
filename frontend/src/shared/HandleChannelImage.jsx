@@ -48,7 +48,7 @@ export default function HandleChannelImage({srcImage, resImage, confidenceThres,
                     <Item>
                         <InferenceInputs confidenceThres={confidenceThres}
                                         handleConfidenceThres={handleConfidenceThres}
-                                        jsonData={jsonData}/>    
+                        />    
                     </Item>
                 </Grid>
                 </Grid>

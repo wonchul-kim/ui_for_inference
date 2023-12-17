@@ -14,10 +14,12 @@ export default function CustomSlider({title, value, handleSliderChange, handleIn
 {
   return (
     <Box sx={{ width: 250 }}>
-      <Typography id="input-slider" gutterBottom>
-        {title}
-      </Typography>
       <Grid container spacing={2} alignItems="center">
+       {title && title !== "" && (
+          <Grid item>
+            <Typography variant="body1">{title}</Typography>
+          </Grid>
+        )}
         <Grid item xs>
           <Slider
             value={typeof value === 'number' ? value : 0}

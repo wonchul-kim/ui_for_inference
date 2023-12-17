@@ -7,13 +7,12 @@ import Slider from '@mui/material/Slider';
 import MuiInput from '@mui/material/Input';
 
 import CustomSlider from './CustomSlider';
-import ShowJson from './ShowJson';
 
 const Input = styled(MuiInput)`
   width: 42px;
 `;
 
-export default function InferenceInputs({confidenceThres, handleConfidenceThres, jsonData}) {
+export default function InferenceInputs({title, confidenceThres, handleConfidenceThres, jsonData}) {
   const [value, setValue] = React.useState(confidenceThres);
 
   const handleSliderChange = (event, newValue) => {
@@ -35,31 +34,12 @@ export default function InferenceInputs({confidenceThres, handleConfidenceThres,
   };
 
   return (
-    <div>
         <CustomSlider
-            title={"Confidence"}
+            title={title}
             value={value}
             handleSliderChange={handleSliderChange}
             handleInputChange={handleInputChange}
             handleBlur={handleBlur} 
         />
-        {/* <CustomSlider
-            title={"IoU"}
-            value={value}
-            handleSliderChange={handleSliderChange}
-            handleInputChange={handleInputChange}
-            handleBlur={handleBlur} 
-        />
-        <CustomSlider
-            title={"Accuracy"}
-            value={value}
-            handleSliderChange={handleSliderChange}
-            handleInputChange={handleInputChange}
-            handleBlur={handleBlur} 
-        /> */}
-
-        <ShowJson jsonData={jsonData} />
-    </div>
-    
   );
 }

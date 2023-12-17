@@ -7,7 +7,7 @@ import './styles.css'; // Import your stylesheet
 
 import InferenceInputs from './InferenceInputs';
 import HandleChannelImage from './HandleChannelImage';
-import { filledInputClasses } from '@mui/material';
+import ShowJson from './ShowJson';
 
 const Item = styled(Paper)(({ theme }) => ({
   backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
@@ -58,9 +58,11 @@ export default function VisSegmentation({title, srcImage, resImage, confidenceTh
           <Grid item xs={4}>
             {jsonData && (
               <Item>
-                <InferenceInputs confidenceThres={confidenceThres}
+                <h2 className="preview-title">Confidences</h2>
+                <InferenceInputs title={"weklfjwef"} confidenceThres={confidenceThres}
                                   handleConfidenceThres={handleConfidenceThres}
-                                  jsonData={jsonData}/>    
+                />    
+                <ShowJson jsonData={jsonData} />
               </Item>
             )}
           </Grid>
@@ -72,9 +74,6 @@ export default function VisSegmentation({title, srcImage, resImage, confidenceTh
                             handleConfidenceThres={handleConfidenceThres}
                             jsonData={jsonData}
         />
-
-
-
     </Box>
   );
 }
