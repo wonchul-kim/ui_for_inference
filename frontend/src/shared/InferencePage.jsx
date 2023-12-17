@@ -5,6 +5,7 @@ import Grid from '@mui/material/Grid';
 import { styled } from '@mui/material/styles';
 import colormap from 'colormap';
 import './styles.css'; // Import your stylesheet
+import pica from 'pica';
 
 import UploadImage from './UploadImage';
 import DisplayImage from './DisplayImage';
@@ -145,48 +146,66 @@ export default function InferencePage() {
     }
   };
 
-  const applyThresholdToEncodedImage = (base64Image, threshold, colorIndex) => {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.src = `data:image/png;base64,${base64Image}`;
-  
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
-        canvas.width = img.width;
-        canvas.height = img.height;
-  
-        context.drawImage(img, 0, 0, img.width, img.height);
-  
-        const imageData = context.getImageData(0, 0, img.width, img.height);
-        const data = new Uint8Array(imageData.data.buffer);
-        console.log(">>> colorIndex: ", colorIndex, threshold)
-        for (let i = 0; i < data.length; i += 4) {
-          if (data[i] < threshold){
-            data[i + 3] = 0;
-          }
-          else {
-            data[i] = colorMap[colorIndex][0];
-            data[i + 1] = colorMap[colorIndex][1];
-            data[i + 2] = colorMap[colorIndex][2];           
-            data[i + 3] = 255;
+
+const applyThresholdToEncodedImage = (base64Image, threshold, colorIndex) => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.src = `data:image/png;base64,${base64Image}`;
+
+    img.onload = () => {
+      const originalWidth = img.width;
+      const originalHeight = img.height;
+      const resizeFactor = 0.1; // You can adjust the resize factor as needed
+
+      // Create a temporary canvas for resizing
+      const tempCanvas = document.createElement('canvas');
+      const tempContext = tempCanvas.getContext('2d');
+      tempCanvas.width = Math.floor(originalWidth * resizeFactor);
+      tempCanvas.height = Math.floor(originalHeight * resizeFactor);
+      tempContext.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
+
+      // Create the main canvas for thresholding
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      canvas.width = originalWidth;
+      canvas.height = originalHeight;
+
+      // Use pica to resize the image
+      const picaInstance = pica();
+      picaInstance.resize(tempCanvas, canvas).then(() => {
+        // Draw the resized image onto the main canvas
+        context.drawImage(canvas, 0, 0, originalWidth, originalHeight);
+
+        // Get the image data
+        const imageData = context.getImageData(0, 0, originalWidth, originalHeight);
+
+        // Apply threshold to the image
+        for (let i = 0; i < imageData.data.length; i += 4) {
+          if (imageData.data[i] < threshold) {
+            imageData.data[i + 3] = 0;
+          } else {
+            imageData.data[i] = colorMap[colorIndex][0];
+            imageData.data[i + 1] = colorMap[colorIndex][1];
+            imageData.data[i + 2] = colorMap[colorIndex][2];
+            imageData.data[i + 3] = 255;
           }
         }
-  
+
+        // Put the thresholded image data back to the main canvas
         context.putImageData(imageData, 0, 0);
-  
+
         // Convert the canvas to base64
         const filteredSrc = canvas.toDataURL('image/png');
         resolve(filteredSrc);
-      };
-  
-      img.onerror = (error) => {
-        reject(error);
-      };
-    });
-  };
-  
-  
+      });
+    };
+
+    img.onerror = (error) => {
+      reject(error);
+    };
+  });
+};
+
   const jsonData = {
       key1: 'value1',
       key2: 'value2',
