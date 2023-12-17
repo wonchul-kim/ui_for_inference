@@ -24,7 +24,7 @@ export default function VisSegmentation({title, srcImage, resImage, confidenceTh
     <Box sx={{ flexGrow: 1 }} className='container'>
       {srcImage && (
         <Grid container spacing={2}>
-            <Grid item xs={8}>
+            <Grid item xs={12}>
             <div className="preview-container">
               <h2 className="preview-title">{title}</h2>
               <div className="preview-image-container">
@@ -33,8 +33,8 @@ export default function VisSegmentation({title, srcImage, resImage, confidenceTh
                   alt="srcImage"
                   className="preview-image"
                 />
-                {/* {Object.keys(segmentationDataUrl).length !== 0 && 
-                  Object.entries(segmentationDataUrl).map(([key, val]) => (
+                {Object.keys(resImage).length !== 0 && 
+                  Object.entries(resImage).map(([key, val]) => (
                   <img
                     // key={key}
                     src={val}
@@ -42,20 +42,11 @@ export default function VisSegmentation({title, srcImage, resImage, confidenceTh
                     className="overlay-image"
                     onError={(e) => console.error(`Error loading image for key ${key}:`, e)}
                   />
-                ))} */}
-                {Object.keys(resImage).length !== 0 && (
-                  <img
-                    // key={key}
-                    src={resImage['channel1']}
-                    // src={`data:image/png;base64,${resImage['channel1']}`}
-                    alt='channel1'
-                    className="overlay-image"
-                  />
-                )}
+                ))}
               </div>
             </div>
           </Grid>
-          <Grid item xs={4}>
+          <Grid item xs={6}>
             {jsonData && (
               <Item>
                 <h2 className="preview-title">Confidences</h2>
@@ -69,10 +60,19 @@ export default function VisSegmentation({title, srcImage, resImage, confidenceTh
                     />
                   ))
                 )}
-                <ShowJson jsonData={jsonData} />
               </Item>
             )}
           </Grid>
+          <Grid item xs={6}>
+            {jsonData && (
+              <Item>
+                <h2 className="preview-title">JSON Data</h2>
+            <ShowJson jsonData={jsonData} />
+              </Item>
+            )}
+
+          </Grid>
+          
           </Grid>
           )}
           

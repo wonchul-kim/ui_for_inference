@@ -38,18 +38,6 @@ export default function InferencePage() {
     .catch((error) => {
       console.error("Error processing image:", error);
     });
-
-    // var tmp = {};
-    // Object.entries(segmentationDataUrl).forEach(([key, val]) => {
-    //   tmp[key] = applyThresholdToEncodedImage(val, confThres)
-    //   .then((filteredSrc) => {
-    //     // console.log("Filtered Image Source:", filteredSrc);
-    //     setFilteredImage(prev => ({...prev , [key]: filteredSrc}));
-    //   })
-    //   .catch((error) => {
-    //     console.error("Error processing image:", error);
-    //   });
-    // })
   }
 
   const handleUploadImage = (image) => {
@@ -77,8 +65,6 @@ export default function InferencePage() {
             .catch((error) => {
               console.error("Error processing image:", error);
             });
-
-          // setFilteredImage(prev => ({...prev , [key]: applyThresholdToEncodedImage(val, 0)}));
         })
       } catch (error) {
         console.error('Error:', error.message);
