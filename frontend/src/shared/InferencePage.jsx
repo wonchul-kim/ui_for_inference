@@ -8,6 +8,8 @@ import './styles.css'; // Import your stylesheet
 import UploadImage from './UploadImage';
 import DisplayImage from './DisplayImage';
 import InferenceInputs from './InferenceInputs';
+import FilteredImage from './FilteredImage';
+
 
 const Item = styled(Paper)(({ theme }) => ({
   backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
@@ -29,7 +31,14 @@ export default function InferencePage() {
     setConfidenceThres(confThres);
     var tmp = {};
     Object.entries(segmentationDataUrl).forEach(([key, val]) => {
-      tmp[key] = applyThresholdToEncodedImage(val, confThres);
+      tmp[key] = applyThresholdToEncodedImage(val, confThres)
+      .then((filteredSrc) => {
+        // console.log("Filtered Image Source:", filteredSrc);
+        setFilteredImage(prev => ({...prev , [key]: filteredSrc}));
+      })
+      .catch((error) => {
+        console.error("Error processing image:", error);
+      });
     })
     setFilteredImage(tmp);
   }
@@ -50,7 +59,16 @@ export default function InferencePage() {
         // Display the segmentation result
         Object.entries(preds).forEach(([key, val]) => {
           setSegmentationDataUrl(prev => ({...prev , [key]: val}));
-          setFilteredImage(prev => ({...prev , [key]: val}));
+          applyThresholdToEncodedImage(val, 0)
+            .then((filteredSrc) => {
+              // console.log("Filtered Image Source:", filteredSrc);
+              setFilteredImage(prev => ({...prev , [key]: filteredSrc}));
+            })
+            .catch((error) => {
+              console.error("Error processing image:", error);
+            });
+
+          // setFilteredImage(prev => ({...prev , [key]: applyThresholdToEncodedImage(val, 0)}));
         })
       } catch (error) {
         console.error('Error:', error.message);
@@ -102,32 +120,43 @@ export default function InferencePage() {
     return true;
   }
 
-  const applyThresholdToEncodedImage = (encodedImage, threshold) => {
-    // Decode the base64-encoded image
-    const decodedImage = atob(encodedImage);
-    const imageArray = new Uint8Array(decodedImage.length);
-    console.log(">>> ", decodedImage.length)
-    for (let i = 0; i < decodedImage.length; i++) {
-      imageArray[i] = decodedImage.charCodeAt(i);
-    }
-    const uniqueValues = [...new Set(imageArray)];
-    // console.log(">>> UNIQUE: ", uniqueValues)
-    // Assuming the image is in RGBA format
-    const pixels = new Uint8Array(imageArray.buffer);
-    // console.log('original: ', pixels)
-    // console.log('original-threshold: ', threshold, pixels.includes(threshold))
-    const thresholdedPixels = pixels.map(value => (value < 0) ? 0 : value);
-    // console.log('thresholdedPixels: ', thresholdedPixels)
-    // console.log('thresholdedPixels-threshold: ', threshold, thresholdedPixels.includes(threshold))
-    // console.log(">>>>>>>>>>>>> ", arraysAreEqual(pixels,thresholdedPixels))
-
-    // Encode the modified pixel array
-    // const thresholdedImage = btoa(String.fromCharCode.apply(null, thresholdedPixels));
-    const thresholdedImage = btoa(String.fromCharCode(...thresholdedPixels));
-
-    return thresholdedImage;
+  const applyThresholdToEncodedImage = (base64Image, threshold) => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.src = `data:image/png;base64,${base64Image}`;
+  
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.width = img.width;
+        canvas.height = img.height;
+  
+        context.drawImage(img, 0, 0, img.width, img.height);
+  
+        const imageData = context.getImageData(0, 0, img.width, img.height);
+        const data = imageData.data;
+  
+        // Apply threshold filter to color channels
+        for (let i = 0; i < data.length; i += 4) {
+          const pixelValue = (data[i] + data[i + 1] + data[i + 2]) / 3;
+          if (pixelValue < threshold) {
+            data[i] = data[i + 1] = data[i + 2] = 0; // Set color channels to 0
+          }
+        }
+  
+        context.putImageData(imageData, 0, 0);
+  
+        // Convert the canvas to base64
+        const filteredSrc = canvas.toDataURL('image/png');
+        resolve(filteredSrc);
+      };
+  
+      img.onerror = (error) => {
+        reject(error);
+      };
+    });
   };
-
+  
   const sampleJson = {
       key1: 'value1',
       key2: 'value2',
@@ -177,7 +206,8 @@ export default function InferencePage() {
                 {Object.keys(filteredImage).length !== 0 && (
                   <img
                     // key={key}
-                    src={`data:image/png;base64,${filteredImage['channel1']}`}
+                    src={filteredImage['channel1']}
+                    // src={`data:image/png;base64,${filteredImage['channel1']}`}
                     alt='channel1'
                     className="overlay-image"
                   />
@@ -198,7 +228,8 @@ export default function InferencePage() {
                 />
                 <img
                   key={key}
-                  src={`data:image/png;base64,${val}`}
+                  // src={`data:image/png;base64,${val}`}
+                  src={val}
                   alt={key}
                   className="overlay-image"
                   onError={(e) => console.error("Error loading channel image: ", e)}
