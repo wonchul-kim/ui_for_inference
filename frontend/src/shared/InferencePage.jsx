@@ -120,10 +120,8 @@ export default function InferencePage() {
         const data = new Uint8Array(imageData.data.buffer);
   
         // Apply threshold filter to color channels
-        const thresholdValue = threshold * 3; // Precompute the threshold value
         for (let i = 0; i < data.length; i += 4) {
-          const pixelValue = data[i] + data[i + 1] + data[i + 2];
-          if (pixelValue < thresholdValue) {
+          if (data[i] < threshold) {
             data[i] = data[i + 1] = data[i + 2] = 255; // Set color channels to 255 (white)
           }
         }
