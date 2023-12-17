@@ -163,13 +163,13 @@ export default function InferencePage() {
         console.log(">>> colorIndex: ", colorIndex, threshold)
         for (let i = 0; i < data.length; i += 4) {
           if (data[i] < threshold){
+            data[i + 3] = 0;
+          }
+          else {
             data[i] = colorMap[colorIndex][0];
             data[i + 1] = colorMap[colorIndex][1];
             data[i + 2] = colorMap[colorIndex][2];           
             data[i + 3] = 255;
-          }
-          else {
-            data[i + 3] = 0;
           }
         }
   

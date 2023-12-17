@@ -32,7 +32,7 @@ async def upload_image(image: UploadFile = File(...)):
         return {"status": f"Image ({image.shape}) uploaded successfully",
                 "task": 'segmentation',
                 "prediction": encode_image(channels),
-                "shape": image.shape}
+                "shape": {"height": image.shape[0], "width": image.shape[1], "channel": image.shape[2]}}
     else:
         return {"status": "Failed to upload Image", 'task': 'segmentation', 'prediction': None, 'shape': None}
 
@@ -42,7 +42,7 @@ async def upload_image(image: UploadFile = File(...)):
     #     return JSONResponse(content={"status": f"Image ({image.shape}) uploaded successfully",
     #             "task": 'detection',
     #             "prediction": preds,
-    #             "shape": image.shape})
+    #             "shape": {"height": image.shape[0], "width": image.shape[1], "channel": image.shape[2]}})
     # else:
     #     return JSONResponse(content={"status": "Failed to upload Image", 
     #         "task": 'detection',
@@ -77,11 +77,11 @@ def encode_image(channels):
 def get_seg_dummy(image):
     h, w, ch = image.shape
     print("image shape: ", image.shape)
-    channel1 = np.ones((h, w))
-    channel2 = np.ones((h, w))
-    channel3 = np.ones((h, w))
-    channel4 = np.ones((h, w))
-    channel5 = np.ones((h, w))
+    channel1 = np.zeros((h, w))
+    channel2 = np.zeros((h, w))
+    channel3 = np.zeros((h, w))
+    channel4 = np.zeros((h, w))
+    channel5 = np.zeros((h, w))
 
     channel1[0:1000, 0:1000] = 0.3
     channel2[500:1500, 500:1500] = 0.3
