@@ -44,7 +44,6 @@ export default function InferencePage() {
         console.error("Error processing image:", error);
       });
     })
-    setFilteredImage(tmp);
   }
 
   const handleUploadImage = (image) => {
