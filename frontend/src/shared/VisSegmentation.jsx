@@ -76,11 +76,11 @@ export default function VisSegmentation({title, srcImage, resImage, confidenceTh
           </Grid>
           )}
           
-        {/* <HandleChannelImage srcImage={srcImage} resImage={resImage}
+        <HandleChannelImage srcImage={srcImage} resImage={resImage}
                             confidenceThres={confidenceThres} 
                             handleConfidenceThres={handleConfidenceThres}
                             jsonData={jsonData}
-        /> */}
+        />
     </Box>
   );
 }

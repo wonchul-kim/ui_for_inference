@@ -46,9 +46,12 @@ export default function HandleChannelImage({srcImage, resImage, confidenceThres,
                 </Grid>
                 <Grid item xs={4}>
                     <Item>
-                        <InferenceInputs confidenceThres={confidenceThres}
-                                        handleConfidenceThres={handleConfidenceThres}
-                        />    
+                      <InferenceInputs
+                        key={key}  
+                        title={key}
+                        confidenceThres={confidenceThres[key]}
+                        handleConfidenceThres={handleConfidenceThres}
+                      />
                     </Item>
                 </Grid>
                 </Grid>
