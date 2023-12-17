@@ -3,6 +3,7 @@ import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Grid from '@mui/material/Grid';
 import { styled } from '@mui/material/styles';
+import colormap from 'colormap';
 import './styles.css'; // Import your stylesheet
 
 import UploadImage from './UploadImage';
@@ -17,7 +18,12 @@ const Item = styled(Paper)(({ theme }) => ({
   textAlign: 'center',
   color: theme.palette.text.secondary,
 }));
-  
+
+const colorMap = [[255, 0, 0], [0, 255, 0], [0, 0, 255], 
+                  [255, 255, 0], [255, 0, 255], [153, 153, 255], 
+                  [255, 153, 204], [255, 102, 0], [51, 153, 102],
+                  [153, 153, 255], [128, 0, 128], [153, 204, 0]]
+
 export default function InferencePage() {
   const [uploadedImage, setUploadedImage] = useState(null);
   const [imageDataUrl, setImageDataUrl] = useState(null);
@@ -28,10 +34,10 @@ export default function InferencePage() {
   const [arrayImage, setArrayImage] = useState(null);
 
   const handleConfidenceThres = (name, confThres) => {
-    console.log(">>> handleConfidence: ", name, confThres)
     setConfidenceThres(prevConfidences => ({...prevConfidences, [name]: confThres}))
 
-    applyThresholdToEncodedImage(segmentationDataUrl[name], confThres)
+    applyThresholdToEncodedImage(segmentationDataUrl[name], confThres,
+                    Object.keys(confidenceThres).indexOf(name))
     .then((filteredSrc) => {
       // console.log("Filtered Image Source:", filteredSrc);
       setFilteredImage(prev => ({...prev , [name]: filteredSrc}));
@@ -55,10 +61,11 @@ export default function InferencePage() {
     sendImageToBackend(image).then(async (preds) => {
       try {
         // Display the segmentation result
+        var colorIndex = 0;
         Object.entries(preds).forEach(([key, val]) => {
           setSegmentationDataUrl(prev => ({...prev , [key]: val}));
-          setConfidenceThres(prevConfidences => ({...prevConfidences, [key]: 0}))
-          applyThresholdToEncodedImage(val, 0)
+          setConfidenceThres(prevConfidences => ({...prevConfidences, [key]: 128}))
+          applyThresholdToEncodedImage(val, 128, colorIndex)
             .then((filteredSrc) => {
               // console.log("Filtered Image Source:", filteredSrc);
               setFilteredImage(prev => ({...prev , [key]: filteredSrc}));
@@ -66,6 +73,7 @@ export default function InferencePage() {
             .catch((error) => {
               console.error("Error processing image:", error);
             });
+          colorIndex += 1;
         })
       } catch (error) {
         console.error('Error:', error.message);
@@ -103,7 +111,7 @@ export default function InferencePage() {
     }
   };
 
-  const applyThresholdToEncodedImage = (base64Image, threshold) => {
+  const applyThresholdToEncodedImage = (base64Image, threshold, colorIndex) => {
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.src = `data:image/png;base64,${base64Image}`;
@@ -118,11 +126,16 @@ export default function InferencePage() {
   
         const imageData = context.getImageData(0, 0, img.width, img.height);
         const data = new Uint8Array(imageData.data.buffer);
-  
-        // Apply threshold filter to color channels
+        console.log(">>> colorIndex: ", colorIndex, threshold)
         for (let i = 0; i < data.length; i += 4) {
-          if (data[i] < threshold) {
-            data[i] = data[i + 1] = data[i + 2] = 255; // Set color channels to 255 (white)
+          if (data[i] < threshold){
+            data[i] = colorMap[colorIndex][0];
+            data[i + 1] = colorMap[colorIndex][1];
+            data[i + 2] = colorMap[colorIndex][2];           
+            data[i + 3] = 255;
+          }
+          else {
+            data[i + 3] = 0;
           }
         }
   
