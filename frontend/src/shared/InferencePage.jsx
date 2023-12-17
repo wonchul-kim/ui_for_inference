@@ -23,11 +23,16 @@ export default function InferencePage() {
   const [imageDataUrl, setImageDataUrl] = useState(null);
   const [segmentationDataUrl, setSegmentationDataUrl] = useState({});
   const [imageShape, setImageShape] = useState(null);
-  const [confidenceThres, setConfidenceThres] = useState(0);
+  const [confidenceThres, setConfidenceThres] = useState({});
   const [filteredImage, setFilteredImage] = useState({});
 
-  const handleConfidenceThres = (confThres) => {
-    setConfidenceThres(confThres);
+  useEffect(() => {
+    console.log("confidences: ", confidenceThres)
+  }, [confidenceThres])
+
+  const handleConfidenceThres = (name, confThres) => {
+    console.log(">>> handleConfidence: ", name, confThres)
+    setConfidenceThres(prevConfidences => ({...prevConfidences, [name]: confThres}))
     var tmp = {};
     Object.entries(segmentationDataUrl).forEach(([key, val]) => {
       tmp[key] = applyThresholdToEncodedImage(val, confThres)
@@ -58,6 +63,7 @@ export default function InferencePage() {
         // Display the segmentation result
         Object.entries(preds).forEach(([key, val]) => {
           setSegmentationDataUrl(prev => ({...prev , [key]: val}));
+          setConfidenceThres(prevConfidences => ({...prevConfidences, [key]: 0}))
           applyThresholdToEncodedImage(val, 0)
             .then((filteredSrc) => {
               // console.log("Filtered Image Source:", filteredSrc);

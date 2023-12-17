@@ -59,9 +59,16 @@ export default function VisSegmentation({title, srcImage, resImage, confidenceTh
             {jsonData && (
               <Item>
                 <h2 className="preview-title">Confidences</h2>
-                <InferenceInputs title={"weklfjwef"} confidenceThres={confidenceThres}
-                                  handleConfidenceThres={handleConfidenceThres}
-                />    
+                {Object.keys(confidenceThres).length !== 0 && (
+                  Object.entries(confidenceThres).map(([key, val]) => (
+                    <InferenceInputs
+                      key={key}  
+                      title={key}
+                      confidenceThres={val}
+                      handleConfidenceThres={handleConfidenceThres}
+                    />
+                  ))
+                )}
                 <ShowJson jsonData={jsonData} />
               </Item>
             )}
@@ -69,11 +76,11 @@ export default function VisSegmentation({title, srcImage, resImage, confidenceTh
           </Grid>
           )}
           
-        <HandleChannelImage srcImage={srcImage} resImage={resImage}
+        {/* <HandleChannelImage srcImage={srcImage} resImage={resImage}
                             confidenceThres={confidenceThres} 
                             handleConfidenceThres={handleConfidenceThres}
                             jsonData={jsonData}
-        />
+        /> */}
     </Box>
   );
 }

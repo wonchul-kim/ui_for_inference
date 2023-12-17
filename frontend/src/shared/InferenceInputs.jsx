@@ -12,17 +12,21 @@ const Input = styled(MuiInput)`
   width: 42px;
 `;
 
-export default function InferenceInputs({title, confidenceThres, handleConfidenceThres, jsonData}) {
+export default function InferenceInputs({title, confidenceThres, handleConfidenceThres}) {
   const [value, setValue] = React.useState(confidenceThres);
 
+  React.useEffect(() => {
+    console.log("title: ", title)
+  })
+  
   const handleSliderChange = (event, newValue) => {
     setValue(newValue);
-    handleConfidenceThres(newValue)
+    handleConfidenceThres(title, newValue)
   };
 
   const handleInputChange = (event) => {
     setValue(event.target.value === '' ? 0 : Number(event.target.value));
-    handleConfidenceThres(event.target.value === '' ? 0 : Number(event.target.value))
+    handleConfidenceThres(title, event.target.value === '' ? 0 : Number(event.target.value))
   };
 
   const handleBlur = () => {
