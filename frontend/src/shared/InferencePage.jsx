@@ -25,6 +25,7 @@ export default function InferencePage() {
   const [imageShape, setImageShape] = useState(null);
   const [confidenceThres, setConfidenceThres] = useState({});
   const [filteredImage, setFilteredImage] = useState({});
+  const [arrayImage, setArrayImage] = useState(null);
 
   const handleConfidenceThres = (name, confThres) => {
     console.log(">>> handleConfidence: ", name, confThres)
@@ -120,12 +121,11 @@ export default function InferencePage() {
   
         // Apply threshold filter to color channels
         for (let i = 0; i < data.length; i += 4) {
-          const pixelValue = (data[i] + data[i + 1] + data[i + 2]) / 3;
-          if (pixelValue < threshold) {
-            data[i] = data[i + 1] = data[i + 2] = 0; // Set color channels to 0
+          if (data[i] < threshold) {
+            data[i] = data[i + 1] = data[i + 2] = 255; // Set color channels to 0
           }
         }
-  
+
         context.putImageData(imageData, 0, 0);
   
         // Convert the canvas to base64

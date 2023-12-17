@@ -71,11 +71,11 @@ def encode_image(channels):
 def get_dummy(image):
     h, w, ch = image.shape
     print("image shape: ", image.shape)
-    channel1 = np.zeros((h, w))
-    channel2 = np.zeros((h, w))
-    channel3 = np.zeros((h, w))
-    channel4 = np.zeros((h, w))
-    channel5 = np.zeros((h, w))
+    channel1 = np.ones((h, w))
+    channel2 = np.ones((h, w))
+    channel3 = np.ones((h, w))
+    channel4 = np.ones((h, w))
+    channel5 = np.ones((h, w))
 
     channel1[0:1000, 0:1000] = 0.3
     channel2[500:1500, 500:1500] = 0.3
