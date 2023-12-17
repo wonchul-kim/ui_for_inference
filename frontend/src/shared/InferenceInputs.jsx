@@ -12,7 +12,9 @@ const Input = styled(MuiInput)`
   width: 42px;
 `;
 
-export default function InferenceInputs({title, confidenceThres, handleConfidenceThres}) {
+export default function InferenceInputs({title, 
+                    confidenceThres, handleConfidenceThres,
+                    maxValue}) {
   const [value, setValue] = React.useState(confidenceThres);
 
   React.useEffect(() => {
@@ -44,6 +46,7 @@ export default function InferenceInputs({title, confidenceThres, handleConfidenc
             handleSliderChange={handleSliderChange}
             handleInputChange={handleInputChange}
             handleBlur={handleBlur} 
+            maxValue={maxValue}
         />
   );
 }

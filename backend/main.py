@@ -7,7 +7,7 @@ import cv2
 from fastapi import FastAPI, File, UploadFile, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import JSONResponse
 
 app = FastAPI()
 
@@ -23,20 +23,30 @@ app.add_middleware(
 # TrustedHostMiddleware settings (add your frontend's host)
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=["localhost"])
 
-# Upload endpoint
 @app.post("/upload-image/")
 async def upload_image(image: UploadFile = File(...)):
     image = byte_to_array(image)
 
-    # pred = predict(image)
-    channels = get_dummy(image)
+    # channels = get_seg_dummy(image)
+    # if image is not None:
+    #     return {"status": f"Image ({image.shape}) uploaded successfully",
+    #             "task": 'segmentation',
+    #             "prediction": encode_image(channels),
+    #             "shape": image.shape}
+    # else:
+    #     return {"status": "Failed to upload Image", 'task': 'segmentation', 'prediction': None, 'shape': None}
+
+    preds = get_det_dummy(image)
 
     if image is not None:
-        return {"status": f"Image ({image.shape}) uploaded successfully",
-                "prediction": encode_image(channels),
-                "shape": image.shape}
+        return JSONResponse(content={"status": f"Image ({image.shape}) uploaded successfully",
+                "task": 'detection',
+                "prediction": preds,
+                "shape": image.shape})
     else:
-        return {"status": "Failed to upload Image", 'prediction': None, 'shape': None}
+        return JSONResponse(content={"status": "Failed to upload Image", 
+            "task": 'detection',
+            'prediction': None, 'shape': None})
 
 
 def byte_to_array(image: UploadFile):
@@ -45,10 +55,6 @@ def byte_to_array(image: UploadFile):
 
     return image_array
 
-def predict(image):
-    pred = get_dummy(image)
-
-    return pred.astype(np.uint8)
 
 def encode_image(channels):
     if isinstance(channels, dict):
@@ -68,7 +74,7 @@ def encode_image(channels):
         
         return base64.b64encode(buffered.getvalue()).decode("utf-8")
 
-def get_dummy(image):
+def get_seg_dummy(image):
     h, w, ch = image.shape
     print("image shape: ", image.shape)
     channel1 = np.ones((h, w))
@@ -99,6 +105,18 @@ def get_dummy(image):
     channels = {'channel1': channel1, 'channel2': channel2}
 
     return channels
+
+def get_det_dummy(image):
+    h, w, ch = image.shape
+    print("image shape: ", image.shape)
+
+    rect1 = {'label': 'label1', 'points': [500, 10, 1000, 1000], 'confidence': 0.5}
+    rect2 = {'label': 'label2', 'points': [500, 500, 1500, 1500], 'confidence': 0.8}
+    rect3 = {'label': 'label3', 'points': [0, 500, 1000, 1500], 'confidence': 0.3}
+
+    pred = [rect1, rect2, rect3]
+
+    return pred
 
 if __name__ == "__main__":
     import uvicorn

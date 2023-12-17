@@ -10,6 +10,7 @@ import UploadImage from './UploadImage';
 import DisplayImage from './DisplayImage';
 import InferenceInputs from './InferenceInputs';
 import VisSegmentation from './VisSegmentation';
+import VisDetection from './VisDetection';
 
 const Item = styled(Paper)(({ theme }) => ({
   backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
@@ -27,24 +28,46 @@ const colorMap = [[255, 0, 0], [0, 255, 0], [0, 0, 255],
 export default function InferencePage() {
   const [uploadedImage, setUploadedImage] = useState(null);
   const [imageDataUrl, setImageDataUrl] = useState(null);
-  const [segmentationDataUrl, setSegmentationDataUrl] = useState({});
+  const [segmentationResult, setsegmentationResult] = useState({});
+  const [detectionResult, setDetectionResult] = useState([]);
+  const [filteredDetectionResult, setFilteredDetectionResult] = useState([]);
   const [imageShape, setImageShape] = useState(null);
   const [confidenceThres, setConfidenceThres] = useState({});
   const [filteredImage, setFilteredImage] = useState({});
   const [arrayImage, setArrayImage] = useState(null);
+  const [task, setTask] = useState(null);
 
   const handleConfidenceThres = (name, confThres) => {
     setConfidenceThres(prevConfidences => ({...prevConfidences, [name]: confThres}))
 
-    applyThresholdToEncodedImage(segmentationDataUrl[name], confThres,
-                    Object.keys(confidenceThres).indexOf(name))
-    .then((filteredSrc) => {
-      // console.log("Filtered Image Source:", filteredSrc);
-      setFilteredImage(prev => ({...prev , [name]: filteredSrc}));
-    })
-    .catch((error) => {
-      console.error("Error processing image:", error);
-    });
+    if (task === 'segmentatoin'){
+      applyThresholdToEncodedImage(segmentationResult[name], confThres,
+                      Object.keys(confidenceThres).indexOf(name))
+      .then((filteredSrc) => {
+        // console.log("Filtered Image Source:", filteredSrc);
+        setFilteredImage(prev => ({...prev , [name]: filteredSrc}));
+      })
+      .catch((error) => {
+        console.error("Error processing image:", error);
+      });
+    }
+    else if (task === 'detection') {
+      const tmp = [];
+      Object.entries(detectionResult).map(([key, val])  => {
+        const label = val.label;
+        const confidence = val.confidence;
+
+        if (name !== label){
+          tmp.push(val);
+        } 
+        else {
+          if (confidence >= confThres) {
+          tmp.push(val);
+          }
+        }
+      })
+      setFilteredDetectionResult(tmp);
+    }
   }
 
   const handleUploadImage = (image) => {
@@ -58,23 +81,34 @@ export default function InferencePage() {
     };
     reader.readAsDataURL(image);
 
-    sendImageToBackend(image).then(async (preds) => {
+    sendImageToBackend(image).then(async (resp) => {
       try {
-        // Display the segmentation result
-        var colorIndex = 0;
-        Object.entries(preds).forEach(([key, val]) => {
-          setSegmentationDataUrl(prev => ({...prev , [key]: val}));
-          setConfidenceThres(prevConfidences => ({...prevConfidences, [key]: 128}))
-          applyThresholdToEncodedImage(val, 128, colorIndex)
-            .then((filteredSrc) => {
-              // console.log("Filtered Image Source:", filteredSrc);
-              setFilteredImage(prev => ({...prev , [key]: filteredSrc}));
-            })
-            .catch((error) => {
-              console.error("Error processing image:", error);
-            });
-          colorIndex += 1;
-        })
+        console.log("Response: ", resp)
+        setTask(resp.task);
+        // // For segmentationResult,
+        if (resp.task === 'segmentation') {
+          var colorIndex = 0;
+          Object.entries(resp.prediction).forEach(([key, val]) => {
+            setsegmentationResult(prev => ({...prev , [key]: val}));
+            setConfidenceThres(prevConfidences => ({...prevConfidences, [key]: 128}))
+            applyThresholdToEncodedImage(val, 128, colorIndex)
+              .then((filteredSrc) => {
+                // console.log("Filtered Image Source:", filteredSrc);
+                setFilteredImage(prev => ({...prev , [key]: filteredSrc}));
+              })
+              .catch((error) => {
+                console.error("Error processing image:", error);
+              });
+            colorIndex += 1;
+          })
+        }
+        else if (resp.task === 'detection'){
+          setDetectionResult(resp.prediction);
+          setFilteredDetectionResult(resp.prediction);
+          Object.entries(resp.prediction).map(([key, val]) => {
+            setConfidenceThres(prevConfidences => ({...prevConfidences, [val.label]: 0.25}))
+          })
+        }
       } catch (error) {
         console.error('Error:', error.message);
       }
@@ -99,7 +133,7 @@ export default function InferencePage() {
         console.log('Backend response:', result);
         setImageShape(result.shape);
 
-        return result.prediction; // Assuming the result has a property 'segmentation_prediction'
+        return result; // Assuming the result has a property 'segmentation_prediction'
 
       } else {
         // Handle error response from the backend
@@ -171,12 +205,26 @@ export default function InferencePage() {
           <UploadImage onUploadImage={handleUploadImage} />
         </div>
       </Grid>
-      <VisSegmentation title="All Channels"
-                      srcImage={imageDataUrl} resImage={filteredImage}
-                      confidenceThres={confidenceThres} 
-                      handleConfidenceThres={handleConfidenceThres}
-                      jsonData={jsonData}
-      />
+      {task && task === 'segmentation' && (
+        <VisSegmentation title="All Predictions"
+                        srcImage={imageDataUrl} resImage={filteredImage}
+                        confidenceThres={confidenceThres} 
+                        handleConfidenceThres={handleConfidenceThres}
+                        jsonData={jsonData}
+                        maxValue={255}
+        />
+      )
+      }
+      {task && task === 'detection' && (
+        <VisDetection title="All Predictions"
+                        srcImage={imageDataUrl} filteredDetectionResult={filteredDetectionResult}
+                        confidenceThres={confidenceThres} 
+                        handleConfidenceThres={handleConfidenceThres}
+                        jsonData={jsonData}
+                        maxValue={1}
+        />
+      )
+      }
     </Grid>
     </Box>
   );

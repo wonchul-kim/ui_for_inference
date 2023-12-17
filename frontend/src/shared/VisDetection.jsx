@@ -6,8 +6,8 @@ import { styled } from '@mui/material/styles';
 import './styles.css'; // Import your stylesheet
 
 import InferenceInputs from './InferenceInputs';
-import HandleChannelImage from './HandleChannelImage';
 import ShowJson from './ShowJson';
+import DrawRectangles from './DrawRectangles';
 
 const Item = styled(Paper)(({ theme }) => ({
   backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
@@ -17,7 +17,8 @@ const Item = styled(Paper)(({ theme }) => ({
   color: theme.palette.text.secondary,
 }));
   
-export default function VisSegmentation({title, srcImage, resImage, confidenceThres,
+export default function VisDetection({title, srcImage, filteredDetectionResult, detColorMap, 
+                                        confidenceThres,
                                        handleConfidenceThres, maxValue, jsonData})
 {
   return (
@@ -28,21 +29,8 @@ export default function VisSegmentation({title, srcImage, resImage, confidenceTh
             <div className="preview-container">
               <h2 className="preview-title">{title}</h2>
               <div className="preview-image-container">
-                <img
-                  src={srcImage}
-                  alt="srcImage"
-                  className="preview-image"
-                />
-                {Object.keys(resImage).length !== 0 && 
-                  Object.entries(resImage).map(([key, val]) => (
-                  <img
-                    // key={key}
-                    src={val}
-                    alt={key}
-                    className="overlay-image"
-                    onError={(e) => console.error(`Error loading image for key ${key}:`, e)}
-                  />
-                ))}
+                <DrawRectangles srcImage={srcImage} detectionResult={filteredDetectionResult}
+                               />
               </div>
             </div>
           </Grid>
@@ -57,6 +45,7 @@ export default function VisSegmentation({title, srcImage, resImage, confidenceTh
                       title={key}
                       confidenceThres={val}
                       handleConfidenceThres={handleConfidenceThres}
+                      maxValue={maxValue}
                     />
                   ))
                 )}
@@ -76,11 +65,6 @@ export default function VisSegmentation({title, srcImage, resImage, confidenceTh
           </Grid>
           )}
           
-        <HandleChannelImage srcImage={srcImage} resImage={resImage}
-                            confidenceThres={confidenceThres} 
-                            handleConfidenceThres={handleConfidenceThres}
-                            jsonData={jsonData}
-        />
     </Box>
   );
 }
