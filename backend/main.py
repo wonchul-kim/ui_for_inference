@@ -27,11 +27,11 @@ app.add_middleware(TrustedHostMiddleware, allowed_hosts=["localhost"])
 async def upload_image(image: UploadFile = File(...)):
     image = byte_to_array(image)
 
-    channels = get_seg_dummy(image)
+    preds = get_seg_dummy(image)
     if image is not None:
         return {"status": f"Image ({image.shape}) uploaded successfully",
                 "task": 'segmentation',
-                "prediction": encode_image(channels),
+                "prediction": encode_image(preds),
                 "shape": {"height": image.shape[0], "width": image.shape[1], "channel": image.shape[2]}}
     else:
         return {"status": "Failed to upload Image", 'task': 'segmentation', 'prediction': None, 'shape': None}
@@ -83,12 +83,12 @@ def get_seg_dummy(image):
     channel4 = np.zeros((h, w))
     channel5 = np.zeros((h, w))
 
-    channel1[0:1000, 0:1000] = 0.3
-    channel2[500:1500, 500:1500] = 0.3
-    channel2[:, -500:] = 0.6
-    channel3[-1000:, -1000:] = 0.3
-    channel4[-1000:, :] = 0.3
-    channel5[:1000, :] = 0.6
+    channel1[0:350, 0:350] = 0.3
+    channel2[200:600, 200:600] = 0.3
+    channel2[:, -200:] = 0.6
+    channel3[-400:, -400:] = 0.3
+    channel4[-100:, :] = 0.3
+    channel5[:100, :] = 0.6
 
     channel1 = (np.stack([channel1, channel1, channel1, np.ones((h, w))], axis=-1)*255).astype(np.uint8)
     channel2 = (np.stack([channel2, channel2, channel2, np.ones((h, w))], axis=-1)*255).astype(np.uint8)
@@ -102,7 +102,7 @@ def get_seg_dummy(image):
 
     # channels = {'channel1': channel1, 'channel2': channel2, 'channel3': channel3, 
     #             'channel4': channel4, 'channel5': channel5, }
-    channels = {'channel1': channel1, 'channel2': channel2}
+    channels = {'channel1': channel1, 'channel2': channel2, 'channel3': channel3}
 
     return channels
 
