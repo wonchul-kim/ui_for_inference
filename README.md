@@ -7,7 +7,12 @@
 
 ## Backend
 
+#### To execute the backend 
 ```cmd
+cd backend
+docker build -t backend .
+docker run -it -p 8000:8000 -v ./:/workspace backend
+cd workspace
 python -m uvicorn main:app --reload
 ```
 
@@ -99,7 +104,12 @@ def get_det_dummy(image):
 
 ## Frontend
 
+#### To execute the frontend
 ```cmd
+cd frontend
+docker build -t frontend .
+docker run -it -p 3000:3000 -v ./:/workspace frontend bash
+cd workspace 
 npm run start
 ```
 
