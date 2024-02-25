@@ -39,7 +39,7 @@ export default function InferencePage() {
   const [task, setTask] = useState(null);
 
   const handleConfidenceThres = (name, confThres) => {
-    setConfidenceThres(prevConfidences => ({...prevConfidences, [name]: confThres}))
+        setConfidenceThres(prevConfidences => ({...prevConfidences, [name]: confThres}))
 
     if (task === 'segmentation'){
       applyThresholdToEncodedImage(segmentationResult[name], confThres,
@@ -58,12 +58,14 @@ export default function InferencePage() {
         const label = val.label;
         const confidence = val.confidence;
 
-        if (name !== label){
-          tmp.push(val);
+        if (name === label){
+          if (confidence >= confThres){
+            tmp.push(val);
+          }
         } 
         else {
-          if (confidence >= confThres) {
-          tmp.push(val);
+          if (confidence >= confidenceThres[label]) {
+              tmp.push(val);
           }
         }
       })
