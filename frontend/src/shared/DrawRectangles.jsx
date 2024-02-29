@@ -1,19 +1,20 @@
 import React, { useEffect, useRef } from 'react';
 import './styles.css';
+
 const namedColors = [
-    'red',
-    'blue',
-    'darkgreen',
-    'darkyellow',
-    'darkmagenta',
-    'purple',
-    'fuchsia',
-    'deeppink',
-    'olive',
-    'navy',
-    'teal',
-    'aqua',
-  ];
+  'red',
+  'blue',
+  'darkgreen',
+  'darkyellow',
+  'darkmagenta',
+  'purple',
+  'fuchsia',
+  'deeppink',
+  'olive',
+  'navy',
+  'teal',
+  'aqua',
+];
 
 const DrawRectangles = ({ srcImage, detectionResult }) => {
   const canvasRef = useRef(null);
@@ -58,17 +59,18 @@ const DrawRectangles = ({ srcImage, detectionResult }) => {
         context.fillStyle = namedColors[index];
         context.font = '100px Arial';
         context.fillText(label, points[0] + 10, points[1] + 100);
-    });
-    // legendItems.forEach((item, i) => {
-    //     console.log(item, i)
-    //     const legendItem = document.createElement('div');
-    //     legendItem.className = 'legend-item';
-    //     legendItem.style.color = item.color;
-    //     legendItem.textContent = `${item.label}`;
-    //     legend.appendChild(legendItem);
-    //   });
+      });
     };
   }, [detectionResult]);
+
+  const handleDownload = () => {
+    const canvas = canvasRef.current;
+    const image = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
+    const link = document.createElement('a');
+    link.download = 'image.png'; // 파일 이름 지정
+    link.href = image;
+    link.click();
+  };
 
   return (
     <div className="preview-container">
@@ -76,7 +78,7 @@ const DrawRectangles = ({ srcImage, detectionResult }) => {
         <canvas ref={canvasRef} className="preview-image" />
       </div>
       <div ref={legendRef} className="legend-container"></div>
-
+      <button onClick={handleDownload}>Download Image</button>
     </div>
   );
 };
