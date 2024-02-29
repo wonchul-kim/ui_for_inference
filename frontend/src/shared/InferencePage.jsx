@@ -6,12 +6,16 @@ import { styled } from '@mui/material/styles';
 import colormap from 'colormap';
 import './styles.css'; // Import your stylesheet
 import pica from 'pica';
+import Modal from '@mui/material/Modal';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
 
 import UploadImage from './UploadImage';
 import DisplayImage from './DisplayImage';
 import InferenceInputs from './InferenceInputs';
 import VisSegmentation from './VisSegmentation';
 import VisDetection from './VisDetection';
+import ShowJson from './ShowJson';
 
 const Item = styled(Paper)(({ theme }) => ({
   backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
@@ -20,6 +24,19 @@ const Item = styled(Paper)(({ theme }) => ({
   textAlign: 'center',
   color: theme.palette.text.secondary,
 }));
+
+const style = {
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: 400,
+  bgcolor: 'background.paper',
+  border: '2px solid #000',
+  boxShadow: 24,
+  p: 4,
+};
+
 
 const colorMap = [[255, 0, 0], [0, 255, 0], [0, 0, 255], 
                   [255, 255, 0], [255, 0, 255], [153, 153, 255], 
@@ -37,6 +54,24 @@ export default function InferencePage() {
   const [filteredImage, setFilteredImage] = useState({});
   const [arrayImage, setArrayImage] = useState(null);
   const [task, setTask] = useState(null);
+  const [jsonData, setJsonData] = useState({
+                                              key1: 'value1',
+                                              key2: 'value2',
+                                              key3: {
+                                                  nestedKey1: 'nestedValue1',
+                                                  nestedKey2: 'nestedValue2',
+                                              },
+                                            });
+
+  // modal to show jsonData
+  const [open, setOpen] = React.useState(false);
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
+
+
+  useEffect(() => {
+    setJsonData(detectionResult)
+  }, [detectionResult])
 
   const handleConfidenceThres = (name, confThres) => {
         setConfidenceThres(prevConfidences => ({...prevConfidences, [name]: confThres}))
@@ -208,14 +243,6 @@ const applyThresholdToEncodedImage = (base64Image, threshold, colorIndex) => {
   });
 };
 
-  const jsonData = {
-      key1: 'value1',
-      key2: 'value2',
-      key3: {
-          nestedKey1: 'nestedValue1',
-          nestedKey2: 'nestedValue2',
-      },
-    };
 
   return (
     <Box sx={{ flexGrow: 1 }} className='container'>
@@ -226,6 +253,28 @@ const applyThresholdToEncodedImage = (base64Image, threshold, colorIndex) => {
           <UploadImage onUploadImage={handleUploadImage} />
         </div>
       </Grid>
+    </Grid>
+
+    <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+      <Button onClick={handleOpen}>
+        <Typography variant="body1" style={{ fontWeight: 'bold' }}>SHOW Annotations</Typography>
+      </Button>
+    </Box>
+      <Modal
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <Box sx={style}>
+          <Typography id="modal-modal-title" variant="h6" component="h2">
+            Annotations by JSON Format
+          </Typography>
+          <Item>
+            <ShowJson jsonData={jsonData} />
+          </Item>
+        </Box>
+      </Modal>
       {task && task === 'segmentation' && (
         <VisSegmentation title="All Predictions"
                         srcImage={imageDataUrl} resImage={filteredImage}
@@ -237,16 +286,15 @@ const applyThresholdToEncodedImage = (base64Image, threshold, colorIndex) => {
       )
       }
       {task && task === 'detection' && (
-        <VisDetection title="All Predictions"
-                        srcImage={imageDataUrl} filteredDetectionResult={filteredDetectionResult}
-                        confidenceThres={confidenceThres} 
-                        handleConfidenceThres={handleConfidenceThres}
-                        jsonData={jsonData}
-                        maxValue={1}
-        />
+          <VisDetection title="All Predictions"
+                          srcImage={imageDataUrl} filteredDetectionResult={filteredDetectionResult}
+                          confidenceThres={confidenceThres} 
+                          handleConfidenceThres={handleConfidenceThres}
+                          jsonData={jsonData}
+                          maxValue={1}
+          />
       )
       }
-    </Grid>
     </Box>
   );
 }

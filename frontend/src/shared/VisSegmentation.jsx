@@ -7,7 +7,6 @@ import './styles.css'; // Import your stylesheet
 
 import InferenceInputs from './InferenceInputs';
 import HandleChannelImage from './HandleChannelImage';
-import ShowJson from './ShowJson';
 
 const Item = styled(Paper)(({ theme }) => ({
   backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
@@ -64,16 +63,6 @@ export default function VisSegmentation({title, srcImage, resImage, confidenceTh
               </Item>
             )}
           </Grid>
-          <Grid item xs={6}>
-            {jsonData && (
-              <Item>
-                <h2 className="preview-title">JSON Data</h2>
-            <ShowJson jsonData={jsonData} />
-              </Item>
-            )}
-
-          </Grid>
-          
           </Grid>
           )}
           

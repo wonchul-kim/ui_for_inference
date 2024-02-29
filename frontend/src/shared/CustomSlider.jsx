@@ -7,7 +7,7 @@ import Slider from '@mui/material/Slider';
 import MuiInput from '@mui/material/Input';
 
 const Input = styled(MuiInput)`
-  width: 42px;
+  width: 60px;
 `;
 
 export default function CustomSlider({title, value, handleSliderChange, 
@@ -15,7 +15,7 @@ export default function CustomSlider({title, value, handleSliderChange,
                           maxValue}) 
 {
   return (
-    <Box sx={{ width: 300}}>
+    <Box>
       <Grid container spacing={2} alignItems="center">
        {title && title !== "" && (
           <Grid item>
@@ -34,11 +34,11 @@ export default function CustomSlider({title, value, handleSliderChange,
         <Grid item>
           <Input
             value={value}
-            size="small"
+            // size="small"
             onChange={handleInputChange}
             onBlur={handleBlur}
             inputProps={{
-              step: maxValue === 255 ? 1 : 0.05,
+              step: maxValue === 255 ? 1 : 0.01,
               min: 0,
               max: maxValue,
               type: 'number',

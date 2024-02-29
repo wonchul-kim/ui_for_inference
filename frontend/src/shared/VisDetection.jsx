@@ -6,7 +6,6 @@ import { styled } from '@mui/material/styles';
 import './styles.css'; // Import your stylesheet
 
 import InferenceInputs from './InferenceInputs';
-import ShowJson from './ShowJson';
 import DrawRectangles from './DrawRectangles';
 
 const Item = styled(Paper)(({ theme }) => ({
@@ -19,7 +18,7 @@ const Item = styled(Paper)(({ theme }) => ({
   
 export default function VisDetection({title, srcImage, filteredDetectionResult, detColorMap, 
                                         confidenceThres,
-                                       handleConfidenceThres, maxValue, jsonData})
+                                       handleConfidenceThres, maxValue})
 {
   return (
     <Box sx={{ flexGrow: 1 }} className='container'>
@@ -34,8 +33,8 @@ export default function VisDetection({title, srcImage, filteredDetectionResult, 
               </div>
             </div>
           </Grid>
-          <Grid item xs={6}>
-            {jsonData && (
+          <Grid item xs={12}>
+            {confidenceThres.length !== 0 && (
               <Item>
                 <h2 className="preview-title">Confidences</h2>
                 {Object.keys(confidenceThres).length !== 0 && (
@@ -51,17 +50,7 @@ export default function VisDetection({title, srcImage, filteredDetectionResult, 
                 )}
               </Item>
             )}
-          </Grid>
-          <Grid item xs={6}>
-            {jsonData && (
-              <Item>
-                <h2 className="preview-title">JSON Data</h2>
-            <ShowJson jsonData={jsonData} />
-              </Item>
-            )}
-
-          </Grid>
-          
+          </Grid>         
           </Grid>
           )}
           
