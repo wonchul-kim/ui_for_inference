@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import './styles.css';
+import Button from '@mui/material/Button'; // 추가: 버튼 라이브러리 가져오기
 
 const namedColors = [
   'red',
@@ -78,7 +79,7 @@ const DrawRectangles = ({ srcImage, detectionResult }) => {
         <canvas ref={canvasRef} className="preview-image" />
       </div>
       <div ref={legendRef} className="legend-container"></div>
-      <button onClick={handleDownload}>Download Image</button>
+      <Button variant="contained" onClick={handleDownload}>Download Image</Button>
     </div>
   );
 };
