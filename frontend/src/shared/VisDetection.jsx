@@ -5,6 +5,7 @@ import Grid from '@mui/material/Grid';
 import { styled } from '@mui/material/styles';
 import './styles.css'; // Import your stylesheet
 
+import InputSlider from './inputSlider';
 import InferenceInputs from './InferenceInputs';
 import DrawRectangles from './DrawRectangles';
 
@@ -18,7 +19,8 @@ const Item = styled(Paper)(({ theme }) => ({
   
 export default function VisDetection({title, srcImage, filteredDetectionResult, detColorMap, 
                                         confidenceThres,
-                                       handleConfidenceThres, maxValue})
+                                       handleConfidenceThres, maxValue,
+                                       lineWidth, setLineWidth, fontSize, setFontSize})
 {
   return (
     <Box sx={{ flexGrow: 1 }} className='container'>
@@ -28,8 +30,20 @@ export default function VisDetection({title, srcImage, filteredDetectionResult, 
             <div className="preview-container">
               <h2 className="preview-title">{title}</h2>
               <div className="preview-image-container">
-                <DrawRectangles srcImage={srcImage} detectionResult={filteredDetectionResult}
-                               />
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+
+              <InputSlider title={"Line Width"} 
+                            val={lineWidth} setVal={setLineWidth} 
+                          maxValue={20} minValue={0} stepValue={1} 
+              />
+              <InputSlider title={"Font Size"} 
+                            val={fontSize} setVal={setFontSize} 
+                          maxValue={100} minValue={0} stepValue={5} 
+              />
+              </Box>
+              <DrawRectangles srcImage={srcImage} detectionResult={filteredDetectionResult}
+                            lineWidth={lineWidth} fontSize={fontSize}
+              />
               </div>
             </div>
           </Grid>

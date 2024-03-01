@@ -146,7 +146,7 @@ def get_det_dummy(image):
 @app.get("/get-image/")
 async def get_image(ratio: float = Query(...)):
     print("*** ratio: ", ratio)
-    task = 'segmentation'
+    task = 'detection'
     input_dir = f'/HDD/datasets/projects/inferences/{task}/'
     img_files = glob.glob(osp.join(input_dir, "*.bmp"))
     json_files = glob.glob(osp.join(input_dir, "*.json"))
@@ -179,12 +179,11 @@ async def get_image(ratio: float = Query(...)):
     elif task == 'segmentation':
         preds = {}
         for ann in anns['shapes']:
-            conf = 0.5
-            
+            conf = 0.6
             if len(ann['points']) != 0:
                 _channel = np.zeros((height, width))
                 arr = np.array(ann['points'], dtype=np.int32)
-                cv2.fillPoly(_channel, [arr], color=(0.3))
+                cv2.fillPoly(_channel, [arr], color=(conf))
                 
                 scaled_channel = cv2.resize(copy.deepcopy(_channel), (scaled_width, scaled_height))
                 __channel = (np.stack([scaled_channel, scaled_channel, scaled_channel, np.ones((scaled_height, scaled_width))],

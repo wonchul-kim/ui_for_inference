@@ -17,7 +17,7 @@ const namedColors = [
   'aqua',
 ];
 
-const DrawRectangles = ({ srcImage, detectionResult }) => {
+const DrawRectangles = ({ srcImage, detectionResult, lineWidth, fontSize}) => {
   const canvasRef = useRef(null);
   const legendRef = useRef(null);
 
@@ -50,7 +50,7 @@ const DrawRectangles = ({ srcImage, detectionResult }) => {
         }
 
         context.strokeStyle = namedColors[index]; // Set rectangle border color
-        context.lineWidth = 15; // Set rectangle border width
+        context.lineWidth = lineWidth; // Set rectangle border width
 
         context.beginPath();
         context.rect(points[0], points[1], points[2] - points[0], points[3] - points[1]);
@@ -58,11 +58,11 @@ const DrawRectangles = ({ srcImage, detectionResult }) => {
 
         // Display label near the rectangle
         context.fillStyle = namedColors[index];
-        context.font = '100px Arial';
-        context.fillText(label, points[0] + 10, points[1] + 100);
+        context.font = `${fontSize}px Arial`; // 폰트 크기 변경
+        context.fillText(label, points[0], points[1] - 10);
       });
     };
-  }, [detectionResult]);
+  }, [detectionResult, lineWidth, fontSize]);
 
   const handleDownload = () => {
     const canvas = canvasRef.current;
@@ -79,6 +79,7 @@ const DrawRectangles = ({ srcImage, detectionResult }) => {
         <canvas ref={canvasRef} className="preview-image" />
       </div>
       <div ref={legendRef} className="legend-container"></div>
+
       <Button variant="contained" onClick={handleDownload}>Download Image</Button>
     </div>
   );

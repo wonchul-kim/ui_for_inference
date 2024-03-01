@@ -65,6 +65,8 @@ export default function InferencePage() {
                                                   nestedKey2: 'nestedValue2',
                                               },
                                             });
+  const [lineWidth, setLineWidth] = useState(5);
+  const [fontSize, setFontSize] = useState(30);
 
   // modal to show jsonData
   const [open, setOpen] = React.useState(false);
@@ -383,6 +385,10 @@ export default function InferencePage() {
                           handleConfidenceThres={handleConfidenceThres}
                           jsonData={jsonData}
                           maxValue={1}
+                          lineWidth={lineWidth}
+                          setLineWidth={setLineWidth}
+                          fontSize={fontSize}
+                          setFontSize={setFontSize}
           />
       )
       }
