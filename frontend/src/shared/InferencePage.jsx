@@ -10,6 +10,7 @@ import Modal from '@mui/material/Modal';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 
+import InputSlider from './inputSlider';
 import UploadImage from './UploadImage';
 import DisplayImage from './DisplayImage';
 import InferenceInputs from './InferenceInputs';
@@ -54,7 +55,7 @@ export default function InferencePage() {
   const [filteredImage, setFilteredImage] = useState({});
   const [arrayImage, setArrayImage] = useState(null);
   const [task, setTask] = useState(null);
-  const [ratio, setRatio] = useState(1);
+  const [resizeFactor, setResizeFactor] = useState(0.5);
   const [jsonData, setJsonData] = useState({
                                               key1: 'value1',
                                               key2: 'value2',
@@ -74,7 +75,7 @@ export default function InferencePage() {
 
     if (task === 'segmentation'){
       applyThresholdToEncodedImage(segmentationResult[name], confThres,
-                      Object.keys(confidenceThres).indexOf(name), ratio)
+                      Object.keys(confidenceThres).indexOf(name))
       .then((filteredSrc) => {
         // console.log("Filtered Image Source:", filteredSrc);
         setFilteredImage(prev => ({...prev , [name]: filteredSrc}));
@@ -131,14 +132,14 @@ export default function InferencePage() {
       try {
         console.log("Response: ", resp)
         setTask(resp.task);
-        setRatio(resp.ratio);
+
         // // For segmentationResult,
         if (resp.task === 'segmentation') {
           var colorIndex = 0;
           Object.entries(resp.prediction).forEach(([key, val]) => {
             setsegmentationResult(prev => ({...prev , [key]: val}));
             setConfidenceThres(prevConfidences => ({...prevConfidences, [key]: 128}))
-            applyThresholdToEncodedImage(val, 128, colorIndex, resp.ratio)
+            applyThresholdToEncodedImage(val, 128, colorIndex)
               .then((filteredSrc) => {
                 // console.log("Filtered Image Source:", filteredSrc);
                 setFilteredImage(prev => ({...prev , [key]: filteredSrc}));
@@ -203,7 +204,7 @@ export default function InferencePage() {
         const originalHeight = img.height;
         console.log(">>>> originalWidth: ", originalWidth)
         console.log(">>>> originalHeight: ", originalHeight)
-        const resizeFactor = 0.1; // 작은 사이즈로 리사이징할 비율
+        // const resizeFactor = 0.1; // 작은 사이즈로 리사이징할 비율
   
         // Create a temporary canvas for resizing
         const tempCanvas = document.createElement('canvas');
@@ -216,6 +217,7 @@ export default function InferencePage() {
   
         // Apply threshold to the resized image
         const resizedImageData = tempContext.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+        const tic = performance.now();
         for (let i = 0; i < resizedImageData.data.length; i += 4) {
           if (resizedImageData.data[i] < threshold) {
             resizedImageData.data[i + 3] = 0;
@@ -226,6 +228,8 @@ export default function InferencePage() {
             resizedImageData.data[i + 3] = 255;
           }
         }
+        const tac = performance.now();
+        console.log("*** Loop performance for ", resizeFactor, ": ", tac - tic, " ms");
   
         // Put the thresholded image data back to the temporary canvas
         tempContext.putImageData(resizedImageData, 0, 0);
@@ -265,7 +269,10 @@ export default function InferencePage() {
     </Grid>
 
     <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-      <Button onClick={handleOpen}>
+      <InputSlider title={"Resize Factor"} setVal={setResizeFactor} 
+          maxValue={1} minValue={0} stepValue={0.1} 
+      />
+      <Button  size="small" variant="contained" onClick={handleOpen}>
         <Typography variant="body1" style={{ fontWeight: 'bold' }}>SHOW Annotations</Typography>
       </Button>
     </Box>
