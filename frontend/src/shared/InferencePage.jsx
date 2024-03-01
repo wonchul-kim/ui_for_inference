@@ -9,6 +9,8 @@ import pica from 'pica';
 import Modal from '@mui/material/Modal';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
+import SmartDisplayIcon from '@mui/icons-material/SmartDisplay';
+import IconButton from '@mui/material/IconButton';
 
 import InputSlider from './inputSlider';
 import UploadImage from './UploadImage';
@@ -17,6 +19,7 @@ import InferenceInputs from './InferenceInputs';
 import VisSegmentation from './VisSegmentation';
 import VisDetection from './VisDetection';
 import ShowJson from './ShowJson';
+import SelectImageFile from './selectImageFile';
 
 const Item = styled(Paper)(({ theme }) => ({
   backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
@@ -54,7 +57,7 @@ export default function InferencePage() {
   const [confidenceThres, setConfidenceThres] = useState({});
   const [filteredImage, setFilteredImage] = useState({});
   const [arrayImage, setArrayImage] = useState(null);
-  const [task, setTask] = useState(null);
+  const [task, setTask] = useState('detection');
   const [ratio, setRatio] = useState(0.1);
   const [resizeFactor, setResizeFactor] = useState(1);
   const [jsonData, setJsonData] = useState({
@@ -67,6 +70,10 @@ export default function InferencePage() {
                                             });
   const [lineWidth, setLineWidth] = useState(5);
   const [fontSize, setFontSize] = useState(30);
+
+  // to choose image-files as list
+  const [imageFileList, setImageFileList] = useState([]);
+  const [selectedImageFile, setSeletedImageFile] = useState(null);
 
   // modal to show jsonData
   const [open, setOpen] = React.useState(false);
@@ -269,11 +276,39 @@ export default function InferencePage() {
     });
   };
 
+  useEffect(() => {
+    console.log(">>>> imageFileList: ", imageFileList)
+  })
+
+  const getImageFileList = async () => {
+    try {
+        const url = new URL('http://localhost:8000/get-image-file-list');
+        url.searchParams.append('input_dir', `/HDD/datasets/projects/inferences/${task}`);
+
+        const response = await fetch(url, {
+            method: 'GET',
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch image from backend');
+        }
+
+        const data = await response.json();
+        setImageFileList(data.img_files_list)
+    } catch (error) {
+        console.error('Error fetching image:', error);
+    }
+  };
+
+
 
   const getImageFromBackend = async () => {
     try {
+        console.log(">>>>>>>>>>>> click getImageFromBackend: ", getImageFromBackend)
         const url = new URL('http://localhost:8000/get-image');
+        url.searchParams.append('task', task);
         url.searchParams.append('ratio', ratio);
+        url.searchParams.append('img_file', selectedImageFile)
 
         const response = await fetch(url, {
             method: 'GET',
@@ -288,7 +323,6 @@ export default function InferencePage() {
         const imageSize = await getImageSize(imageSrc);
         console.log('*** getImageFromBackend > Image size:', imageSize.width, 'x', imageSize.height);
 
-        setTask(data.task);
         setUploadedImage(imageSrc);
         setImageDataUrl(imageSrc)
 
@@ -321,8 +355,7 @@ export default function InferencePage() {
     } catch (error) {
         console.error('Error fetching image:', error);
     }
-};
-
+  };
 
   return (
     <Box sx={{ flexGrow: 1 }} className='container'>
@@ -333,16 +366,11 @@ export default function InferencePage() {
           <UploadImage onUploadImage={handleUploadImage} />
         </div>
       </Grid>
-      <Grid item xs={12}>
-        <Button variant="contained" onClick={getImageFromBackend}>
-          이미지 가져오기
-        </Button>
-      </Grid>
     </Grid>
 
     <br/><br/>
 
-    <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+    <Box sx={{ display: 'flex', justifyContent: 'center', padding: '30px'}}>
       <InputSlider title={"Resize Factor For Displaying Image"} val={ratio} setVal={setRatio} 
           maxValue={1} minValue={0} stepValue={0.01} 
       />
@@ -368,6 +396,23 @@ export default function InferencePage() {
           </Item>
         </Box>
       </Modal>
+
+      <Box sx={{ display: 'flex', justifyContent: 'center', padding: '30px' }}>
+        <Button variant="contained" onClick={getImageFileList} style={{marginRight: '30px'}}>
+            Get Image List
+        </Button>
+        <SelectImageFile title={"Select Image File"} 
+                        imageFileList={imageFileList} 
+                        selectedImageFile={selectedImageFile}
+                        setSelectedImageFile={setSeletedImageFile} />
+        <Button variant="contained" 
+                onClick={getImageFromBackend}
+                //  startIcon={<SmartDisplayIcon/>}
+                 style={{marginLeft: '30px'}}>
+          Run
+        </Button>
+      </Box>
+
       {task && task === 'segmentation' && (
         <VisSegmentation title="All Predictions"
                         srcImage={imageDataUrl} resImage={filteredImage}

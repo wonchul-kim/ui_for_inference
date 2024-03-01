@@ -143,25 +143,35 @@ def get_det_dummy(image):
     return pred
 
 
-@app.get("/get-image/")
-async def get_image(ratio: float = Query(...)):
-    print("*** ratio: ", ratio)
-    task = 'detection'
-    input_dir = f'/HDD/datasets/projects/inferences/{task}/'
+@app.get("/get-image-file-list/")
+async def get_image_list(input_dir):
+    print("*** get_image_list > input_dir: ", input_dir)
+    # input_dir = f'/HDD/datasets/projects/inferences/detection/'
     img_files = glob.glob(osp.join(input_dir, "*.bmp"))
-    json_files = glob.glob(osp.join(input_dir, "*.json"))
-    
-    with open(img_files[0], 'rb') as img_file:
-        img = cv2.imread(img_files[0])
-        height, width, channel = img.shape
-        print("1111. img.shape: ", img.shape)
-        scaled_height, scaled_width, scaled_channel = int(height*ratio), int(width*ratio), int(channel*ratio)
-        scaled_img = cv2.resize(copy.deepcopy(img), (scaled_width, scaled_height))
-        print("2222. scaled_img.shape: ", scaled_img.shape)
-        img_encoded = cv2.imencode('.jpg', scaled_img)[1]  # 이미지를 JPEG 형식으로 인코딩
-        img_base64 = base64.b64encode(img_encoded).decode('utf-8')
 
-    with open(str(json_files[0]), 'r') as jf:
+    return {"img_files_list": img_files}
+
+@app.get("/get-image/")
+async def get_image(ratio: float = Query(...), 
+                    img_file: str = Query(...),
+                    task: str = Query(...)):
+    print("*** task: ", task)
+    print("*** ratio: ", ratio)
+    print("*** img_file: ", img_file)
+
+    json_file = osp.splitext(img_file)[0] + '.json'
+    print("*** json_file: ", json_file)
+
+    img = cv2.imread(img_file)
+    height, width, channel = img.shape
+    print("1111. img.shape: ", img.shape)
+    scaled_height, scaled_width, scaled_channel = int(height*ratio), int(width*ratio), int(channel*ratio)
+    scaled_img = cv2.resize(copy.deepcopy(img), (scaled_width, scaled_height))
+    print("2222. scaled_img.shape: ", scaled_img.shape)
+    img_encoded = cv2.imencode('.jpg', scaled_img)[1]  # 이미지를 JPEG 형식으로 인코딩
+    img_base64 = base64.b64encode(img_encoded).decode('utf-8')
+
+    with open(str(json_file), 'r') as jf:
         anns = json.load(jf)
         
     if task == 'detection':
@@ -192,7 +202,6 @@ async def get_image(ratio: float = Query(...)):
                 preds.update({ann['label']: __channel})
             
         return {"status": f"Image ({scaled_img.shape}) uploaded successfully",
-                'task': task, 
                 'image': img_base64,
                 'prediction': encode_image(preds),
                 "shape": {"height": scaled_img.shape[0], "width": scaled_img.shape[1], "channel": scaled_img.shape[2]},
