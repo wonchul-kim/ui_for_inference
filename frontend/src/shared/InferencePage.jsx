@@ -193,64 +193,64 @@ export default function InferencePage() {
   };
 
 
-const applyThresholdToEncodedImage = (base64Image, threshold, colorIndex, ratio=1) => {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.src = `data:image/png;base64,${base64Image}`;
-
-    img.onload = () => {
-      const originalWidth = img.width;
-      const originalHeight = img.height;
-      const resizeFactor = 1; // You can adjust the resize factor as needed
-
-      // Create a temporary canvas for resizing
-      const tempCanvas = document.createElement('canvas');
-      const tempContext = tempCanvas.getContext('2d');
-      tempCanvas.width = Math.floor(originalWidth * resizeFactor);
-      tempCanvas.height = Math.floor(originalHeight * resizeFactor);
-      tempContext.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
-
-      // Create the main canvas for thresholding
-      const canvas = document.createElement('canvas');
-      const context = canvas.getContext('2d');
-      canvas.width = originalWidth;
-      canvas.height = originalHeight;
-
-      // Use pica to resize the image
-      const picaInstance = pica();
-      picaInstance.resize(tempCanvas, canvas).then(() => {
-        // Draw the resized image onto the main canvas
-        context.drawImage(canvas, 0, 0, originalWidth, originalHeight);
-
-        // Get the image data
-        const imageData = context.getImageData(0, 0, originalWidth, originalHeight);
-
-        // Apply threshold to the image
-        for (let i = 0; i < imageData.data.length; i += 4) {
-          if (imageData.data[i] < threshold) {
-            imageData.data[i + 3] = 0;
+  const applyThresholdToEncodedImage = (base64Image, threshold, colorIndex) => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.src = `data:image/png;base64,${base64Image}`;
+  
+      img.onload = () => {
+        const originalWidth = img.width;
+        const originalHeight = img.height;
+        console.log(">>>> originalWidth: ", originalWidth)
+        console.log(">>>> originalHeight: ", originalHeight)
+        const resizeFactor = 0.1; // 작은 사이즈로 리사이징할 비율
+  
+        // Create a temporary canvas for resizing
+        const tempCanvas = document.createElement('canvas');
+        const tempContext = tempCanvas.getContext('2d');
+        tempCanvas.width = Math.floor(originalWidth * resizeFactor);
+        tempCanvas.height = Math.floor(originalHeight * resizeFactor);
+        console.log(">>>> tempCanvas.width: ", tempCanvas.width)
+        console.log(">>>> tempCanvas.height: ", tempCanvas.height)
+        tempContext.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
+  
+        // Apply threshold to the resized image
+        const resizedImageData = tempContext.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+        for (let i = 0; i < resizedImageData.data.length; i += 4) {
+          if (resizedImageData.data[i] < threshold) {
+            resizedImageData.data[i + 3] = 0;
           } else {
-            imageData.data[i] = colorMap[colorIndex][0];
-            imageData.data[i + 1] = colorMap[colorIndex][1];
-            imageData.data[i + 2] = colorMap[colorIndex][2];
-            imageData.data[i + 3] = 255;
+            resizedImageData.data[i] = colorMap[colorIndex][0];
+            resizedImageData.data[i + 1] = colorMap[colorIndex][1];
+            resizedImageData.data[i + 2] = colorMap[colorIndex][2];
+            resizedImageData.data[i + 3] = 255;
           }
         }
-
-        // Put the thresholded image data back to the main canvas
-        context.putImageData(imageData, 0, 0);
-
-        // Convert the canvas to base64
-        const filteredSrc = canvas.toDataURL('image/png');
-        resolve(filteredSrc);
-      });
-    };
-
-    img.onerror = (error) => {
-      reject(error);
-    };
-  });
-};
+  
+        // Put the thresholded image data back to the temporary canvas
+        tempContext.putImageData(resizedImageData, 0, 0);
+  
+        // Use pica to resize the image back to the original size
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.width = originalWidth;
+        canvas.height = originalHeight;
+        const picaInstance = pica();
+        picaInstance.resize(tempCanvas, canvas).then(() => {
+          // Convert the canvas to base64
+          const filteredSrc = canvas.toDataURL('image/png');
+          resolve(filteredSrc);
+        }).catch((error) => {
+          reject(error);
+        });
+      };
+  
+      img.onerror = (error) => {
+        reject(error);
+      };
+    });
+  };
+  
 
 
   return (
