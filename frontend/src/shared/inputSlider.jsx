@@ -35,7 +35,7 @@ export default function InputSlider({title, setVal, maxValue, minValue, stepValu
   };
 
   return (
-    <Box sx={{ display: 'flex', width: 250, marginRight: '30px'}}>
+    <Box sx={{ display: 'flex', width: 350, marginRight: '30px'}}>
       <Typography id="input-slider" gutterBottom>
         {title}
       </Typography>
