@@ -55,7 +55,8 @@ export default function InferencePage() {
   const [filteredImage, setFilteredImage] = useState({});
   const [arrayImage, setArrayImage] = useState(null);
   const [task, setTask] = useState(null);
-  const [resizeFactor, setResizeFactor] = useState(0.5);
+  const [ratio, setRatio] = useState(0.1);
+  const [resizeFactor, setResizeFactor] = useState(1);
   const [jsonData, setJsonData] = useState({
                                               key1: 'value1',
                                               key2: 'value2',
@@ -106,7 +107,7 @@ export default function InferencePage() {
   }
 
   const handleUploadImage = (image) => {
-    console.log("image: ", image)
+    // console.log("image: ", image)
     setUploadedImage(image);
 
     
@@ -121,8 +122,8 @@ export default function InferencePage() {
       img.onload = () => {
         const width = img.width;
         const height = img.height;
-        console.log("Image width:", width);
-        console.log("Image height:", height);
+        // console.log("Image width:", width);
+        // console.log("Image height:", height);
       };
       img.src = dataUrl;
     };
@@ -130,7 +131,7 @@ export default function InferencePage() {
 
     sendImageToBackend(image).then(async (resp) => {
       try {
-        console.log("Response: ", resp)
+        // console.log("Response: ", resp)
         setTask(resp.task);
 
         // // For segmentationResult,
@@ -178,7 +179,7 @@ export default function InferencePage() {
       if (response.ok) {
         // Handle successful response from the backend (if needed)
         const result = await response.json();
-        console.log('Backend response:', result);
+        // console.log('Backend response:', result);
         setImageShape(result.shape);
 
         return result; // Assuming the result has a property 'segmentation_prediction'
@@ -202,8 +203,8 @@ export default function InferencePage() {
       img.onload = () => {
         const originalWidth = img.width;
         const originalHeight = img.height;
-        console.log(">>>> originalWidth: ", originalWidth)
-        console.log(">>>> originalHeight: ", originalHeight)
+        // console.log(">>>> originalWidth: ", originalWidth)
+        // console.log(">>>> originalHeight: ", originalHeight)
         // const resizeFactor = 0.1; // 작은 사이즈로 리사이징할 비율
   
         // Create a temporary canvas for resizing
@@ -211,8 +212,8 @@ export default function InferencePage() {
         const tempContext = tempCanvas.getContext('2d');
         tempCanvas.width = Math.floor(originalWidth * resizeFactor);
         tempCanvas.height = Math.floor(originalHeight * resizeFactor);
-        console.log(">>>> tempCanvas.width: ", tempCanvas.width)
-        console.log(">>>> tempCanvas.height: ", tempCanvas.height)
+        // console.log(">>>> tempCanvas.width: ", tempCanvas.width)
+        // console.log(">>>> tempCanvas.height: ", tempCanvas.height)
         tempContext.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
   
         // Apply threshold to the resized image
@@ -229,7 +230,7 @@ export default function InferencePage() {
           }
         }
         const tac = performance.now();
-        console.log("*** Loop performance for ", resizeFactor, ": ", tac - tic, " ms");
+        // console.log("*** Loop performance for ", resizeFactor, ": ", tac - tic, " ms");
   
         // Put the thresholded image data back to the temporary canvas
         tempContext.putImageData(resizedImageData, 0, 0);
@@ -255,6 +256,70 @@ export default function InferencePage() {
     });
   };
   
+  const getImageSize = (imageSrc) => {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+            resolve({ width: img.width, height: img.height });
+        };
+        img.onerror = reject;
+        img.src = imageSrc;
+    });
+  };
+
+
+  const getImageFromBackend = async () => {
+    try {
+        const url = new URL('http://localhost:8000/get-image');
+        url.searchParams.append('ratio', ratio);
+
+        const response = await fetch(url, {
+            method: 'GET',
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch image from backend');
+        }
+
+        const data = await response.json();
+        const imageSrc = `data:image/jpeg;base64,${data.image}`;
+        const imageSize = await getImageSize(imageSrc);
+        console.log('*** getImageFromBackend > Image size:', imageSize.width, 'x', imageSize.height);
+
+        setTask(data.task);
+        setUploadedImage(imageSrc);
+        setImageDataUrl(imageSrc)
+
+        if (data.task === 'segmentation') {
+          var colorIndex = 0;
+          Object.entries(data.prediction).forEach(([key, val]) => {
+            setsegmentationResult(prev => ({...prev , [key]: val}));
+            setConfidenceThres(prevConfidences => ({...prevConfidences, [key]: 128}))
+            applyThresholdToEncodedImage(val, 128, colorIndex)
+              .then((filteredSrc) => {
+                // console.log("Filtered Image Source:", filteredSrc);
+                setFilteredImage(prev => ({...prev , [key]: filteredSrc}));
+              })
+              .catch((error) => {
+                console.error("Error processing image:", error);
+              });
+            colorIndex += 1;
+          })
+        }
+        else if (data.task === 'detection'){
+          // console.log(">>>>>>>>>>>>>>>>>> ", data.prediction)
+          setDetectionResult(data.prediction);
+          setFilteredDetectionResult(data.prediction);
+          Object.entries(data.prediction).map(([key, val]) => {
+            setConfidenceThres(prevConfidences => ({...prevConfidences, [val.label]: 0.25}))
+          })
+        }
+
+
+    } catch (error) {
+        console.error('Error fetching image:', error);
+    }
+};
 
 
   return (
@@ -266,11 +331,21 @@ export default function InferencePage() {
           <UploadImage onUploadImage={handleUploadImage} />
         </div>
       </Grid>
+      <Grid item xs={12}>
+        <Button variant="contained" onClick={getImageFromBackend}>
+          이미지 가져오기
+        </Button>
+      </Grid>
     </Grid>
 
+    <br/><br/>
+
     <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-      <InputSlider title={"Resize Factor"} setVal={setResizeFactor} 
-          maxValue={1} minValue={0} stepValue={0.1} 
+      <InputSlider title={"Resize Factor For Displaying Image"} val={ratio} setVal={setRatio} 
+          maxValue={1} minValue={0} stepValue={0.01} 
+      />
+      <InputSlider title={"Resize Factor For Filtering"} val={resizeFactor} setVal={setResizeFactor} 
+          maxValue={1} minValue={0} stepValue={0.01} 
       />
       <Button  size="small" variant="contained" onClick={handleOpen}>
         <Typography variant="body1" style={{ fontWeight: 'bold' }}>SHOW Annotations</Typography>

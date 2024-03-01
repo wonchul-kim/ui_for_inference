@@ -10,8 +10,8 @@ const Input = styled(MuiInput)`
   width: 50px;
 `;
 
-export default function InputSlider({title, setVal, maxValue, minValue, stepValue}) {
-  const [value, setValue] = React.useState(1);
+export default function InputSlider({title, val, setVal, maxValue, minValue, stepValue}) {
+  const [value, setValue] = React.useState(val);
 
   const handleValue = (val) => {
     setValue(val);
@@ -35,7 +35,7 @@ export default function InputSlider({title, setVal, maxValue, minValue, stepValu
   };
 
   return (
-    <Box sx={{ display: 'flex', width: 350, marginRight: '30px'}}>
+    <Box sx={{ width: 350, marginRight: '30px'}}>
       <Typography id="input-slider" gutterBottom>
         {title}
       </Typography>
