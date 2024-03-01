@@ -35,7 +35,6 @@ export default function HandleChannelImage({srcImage, resImage, confidenceThres,
                     />
                     <img
                     key={key}
-                    // src={`data:image/png;base64,${val}`}
                     src={val}
                     alt={key}
                     className="overlay-image"

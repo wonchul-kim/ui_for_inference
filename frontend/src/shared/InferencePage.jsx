@@ -54,6 +54,7 @@ export default function InferencePage() {
   const [filteredImage, setFilteredImage] = useState({});
   const [arrayImage, setArrayImage] = useState(null);
   const [task, setTask] = useState(null);
+  const [ratio, setRatio] = useState(1);
   const [jsonData, setJsonData] = useState({
                                               key1: 'value1',
                                               key2: 'value2',
@@ -68,17 +69,12 @@ export default function InferencePage() {
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
-
-  useEffect(() => {
-    setJsonData(detectionResult)
-  }, [detectionResult])
-
   const handleConfidenceThres = (name, confThres) => {
         setConfidenceThres(prevConfidences => ({...prevConfidences, [name]: confThres}))
 
     if (task === 'segmentation'){
       applyThresholdToEncodedImage(segmentationResult[name], confThres,
-                      Object.keys(confidenceThres).indexOf(name))
+                      Object.keys(confidenceThres).indexOf(name), ratio)
       .then((filteredSrc) => {
         // console.log("Filtered Image Source:", filteredSrc);
         setFilteredImage(prev => ({...prev , [name]: filteredSrc}));
@@ -109,13 +105,25 @@ export default function InferencePage() {
   }
 
   const handleUploadImage = (image) => {
+    console.log("image: ", image)
     setUploadedImage(image);
 
+    
     // Display the uploaded image (optional)
     const reader = new FileReader();
     reader.onload = (e) => {
       const dataUrl = e.target.result;
       setImageDataUrl(dataUrl);
+
+      // Get image dimensions
+      const img = new Image();
+      img.onload = () => {
+        const width = img.width;
+        const height = img.height;
+        console.log("Image width:", width);
+        console.log("Image height:", height);
+      };
+      img.src = dataUrl;
     };
     reader.readAsDataURL(image);
 
@@ -123,13 +131,14 @@ export default function InferencePage() {
       try {
         console.log("Response: ", resp)
         setTask(resp.task);
+        setRatio(resp.ratio);
         // // For segmentationResult,
         if (resp.task === 'segmentation') {
           var colorIndex = 0;
           Object.entries(resp.prediction).forEach(([key, val]) => {
             setsegmentationResult(prev => ({...prev , [key]: val}));
             setConfidenceThres(prevConfidences => ({...prevConfidences, [key]: 128}))
-            applyThresholdToEncodedImage(val, 128, colorIndex)
+            applyThresholdToEncodedImage(val, 128, colorIndex, resp.ratio)
               .then((filteredSrc) => {
                 // console.log("Filtered Image Source:", filteredSrc);
                 setFilteredImage(prev => ({...prev , [key]: filteredSrc}));
@@ -184,7 +193,7 @@ export default function InferencePage() {
   };
 
 
-const applyThresholdToEncodedImage = (base64Image, threshold, colorIndex) => {
+const applyThresholdToEncodedImage = (base64Image, threshold, colorIndex, ratio=1) => {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.src = `data:image/png;base64,${base64Image}`;
@@ -192,7 +201,7 @@ const applyThresholdToEncodedImage = (base64Image, threshold, colorIndex) => {
     img.onload = () => {
       const originalWidth = img.width;
       const originalHeight = img.height;
-      const resizeFactor = 0.1; // You can adjust the resize factor as needed
+      const resizeFactor = 1; // You can adjust the resize factor as needed
 
       // Create a temporary canvas for resizing
       const tempCanvas = document.createElement('canvas');

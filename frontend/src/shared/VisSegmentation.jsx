@@ -80,6 +80,7 @@ export default function VisSegmentation({title, srcImage, resImage, confidenceTh
                 {Object.keys(resImage).length !== 0 && 
                   Object.entries(resImage).map(([key, val]) => (
                     <img
+                      key={key}
                       src={val}
                       alt={key}
                       className="overlay-image"
