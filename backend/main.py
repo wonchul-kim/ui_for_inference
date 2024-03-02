@@ -160,6 +160,7 @@ async def get_image(ratio: float = Query(...),
     print("*** img_file: ", img_file)
 
     json_file = osp.splitext(img_file)[0] + '.json'
+    assert osp.exists(json_file), ValueError(f"There is no such json-file: {json_file}")
     print("*** json_file: ", json_file)
 
     img = cv2.imread(img_file)
@@ -173,6 +174,7 @@ async def get_image(ratio: float = Query(...),
 
     with open(str(json_file), 'r') as jf:
         anns = json.load(jf)
+        
         
     if task == 'detection':
         pred = []
@@ -191,6 +193,7 @@ async def get_image(ratio: float = Query(...),
         for ann in anns['shapes']:
             conf = 0.6
             if len(ann['points']) != 0:
+                print(ann['points'])
                 _channel = np.zeros((height, width))
                 arr = np.array(ann['points'], dtype=np.int32)
                 cv2.fillPoly(_channel, [arr], color=(conf))

@@ -57,7 +57,8 @@ export default function InferencePage() {
   const [confidenceThres, setConfidenceThres] = useState({});
   const [filteredImage, setFilteredImage] = useState({});
   const [arrayImage, setArrayImage] = useState(null);
-  const [task, setTask] = useState('detection');
+  // const [task, setTask] = useState('detection');
+  const [task, setTask] = useState('segmentation');
   const [ratio, setRatio] = useState(0.1);
   const [resizeFactor, setResizeFactor] = useState(1);
   const [jsonData, setJsonData] = useState({
@@ -326,7 +327,7 @@ export default function InferencePage() {
         setUploadedImage(imageSrc);
         setImageDataUrl(imageSrc)
 
-        if (data.task === 'segmentation') {
+        if (task === 'segmentation') {
           var colorIndex = 0;
           Object.entries(data.prediction).forEach(([key, val]) => {
             setsegmentationResult(prev => ({...prev , [key]: val}));
@@ -342,7 +343,7 @@ export default function InferencePage() {
             colorIndex += 1;
           })
         }
-        else if (data.task === 'detection'){
+        else if (task === 'detection'){
           // console.log(">>>>>>>>>>>>>>>>>> ", data.prediction)
           setDetectionResult(data.prediction);
           setFilteredDetectionResult(data.prediction);
