@@ -1,0 +1,45 @@
+version: "3.0"
+
+services:
+  django:
+    build: .
+    container_name: diplay-results
+    command: bash -ic "cd /workspace && uvicorn main:app --reload --host 0.0.0.0 --port 8001"
+    ports:
+      - "8001:8001"
+    volumes:
+      - /etc/localtime:/etc/localtime # for time sync
+      - /HDD:/HDD
+      - .:/workspace
+      - cifs-nas-dl-volume:/DeepLearning
+      - cifs-nas-data-volume:/Data 
+      - cifs-nas-program-volume:/Program
+      - ~/storage:/storage
+      - ~/dl/nvadmin:/storage/nvadmin
+      - ~/dl/aivdl1:/storage/aivdl1
+      - ~/dl/aivdl2:/storage/aivdl2
+      - ~/dl/aivdl3:/storage/aivdl3
+      - ~/dl/aivdl4:/storage/aivdl4
+      - ~/dl/aivdl5:/storage/aivdl5
+      - ~/dl/aivdl6:/storage/aivdl6
+      - ~/dl/aivdl7:/storage/aivdl7
+      - ~/dl/aivdl8:/storage/aivdl8
+      - ~/dl/aivdl9:/storage/aivdl9
+      - ~/dl/aivdl11:/storage/aivdl11
+
+volumes:
+  cifs-nas-dl-volume:
+    driver_opts:
+      type: cifs
+      o: "addr=192.168.10.74,username=kb,password=!Aiv11011*,file_mode=0777,dir_mode=0777,iocharset=utf8"
+      device: "//192.168.10.74/DeepLearning"
+  cifs-nas-data-volume:
+    driver_opts:
+      type: cifs
+      o: "addr=192.168.10.74,username=kb,password=!Aiv11011*,file_mode=0777,dir_mode=0777,iocharset=utf8"
+      device: "//192.168.10.74/01.Data"
+  cifs-nas-program-volume:
+    driver_opts:
+      type: cifs
+      o: "addr=192.168.10.74,username=kb,password=!Aiv11011*,file_mode=0777,dir_mode=0777,iocharset=utf8"
+      device: "//192.168.10.74/02.프로그램"

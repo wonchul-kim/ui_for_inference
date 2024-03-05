@@ -144,10 +144,16 @@ def get_det_dummy(image):
 
 
 @app.get("/get-image-file-list/")
-async def get_image_list(input_dir):
-    print("*** get_image_list > input_dir: ", input_dir)
-    # input_dir = f'/HDD/datasets/projects/inferences/detection/'
-    img_files = glob.glob(osp.join(input_dir, "*.bmp"))
+async def get_image_list(input_dir, extensions):
+    print("*** get_image_list > input_dir: ", osp.exists(input_dir), input_dir)
+    print("*** get_image_list > extensions: ", extensions)
+    
+    extensions = extensions.split(",")
+    print("*** extensions: ", extensions)
+
+    img_files = []
+    for extension in extensions:
+        img_files += glob.glob(osp.join(input_dir, "*.{}".format(extension)))
 
     return {"img_files_list": img_files}
 
