@@ -205,24 +205,25 @@ async def get_image(ratio: float = Query(...),
     print("*** ratio: ", ratio)
     print("*** img_file: ", img_file)
 
-    json_file = osp.splitext(img_file)[0] + '.json'
-    assert osp.exists(json_file), ValueError(f"There is no such json-file: {json_file}")
-    print("*** json_file: ", json_file)
-
-    img = cv2.imread(img_file)
-    height, width, channel = img.shape
-    print("1111. img.shape: ", img.shape)
-    scaled_height, scaled_width, scaled_channel = int(height*ratio), int(width*ratio), int(channel*ratio)
-    scaled_img = cv2.resize(copy.deepcopy(img), (scaled_width, scaled_height))
-    print("2222. scaled_img.shape: ", scaled_img.shape)
-    img_encoded = cv2.imencode('.jpg', scaled_img)[1]  # 이미지를 JPEG 형식으로 인코딩
-    img_base64 = base64.b64encode(img_encoded).decode('utf-8')
-
-    with open(str(json_file), 'r') as jf:
-        anns = json.load(jf)
-        
-        
     if task == 'detection':
+
+        json_file = osp.splitext(img_file)[0] + '.json'
+        assert osp.exists(json_file), ValueError(f"There is no such json-file: {json_file}")
+        print("*** json_file: ", json_file)
+
+        img = cv2.imread(img_file)
+        height, width, channel = img.shape
+        print("1111. img.shape: ", img.shape)
+        scaled_height, scaled_width, scaled_channel = int(height*ratio), int(width*ratio), int(channel*ratio)
+        scaled_img = cv2.resize(copy.deepcopy(img), (scaled_width, scaled_height))
+        print("2222. scaled_img.shape: ", scaled_img.shape)
+        img_encoded = cv2.imencode('.jpg', scaled_img)[1]  # 이미지를 JPEG 형식으로 인코딩
+        img_base64 = base64.b64encode(img_encoded).decode('utf-8')
+
+        with open(str(json_file), 'r') as jf:
+            anns = json.load(jf)
+            
+            
         pred = []
         for ann in anns['shapes']:
             print(">>>>>> points: ", ann['points'])
@@ -237,37 +238,37 @@ async def get_image(ratio: float = Query(...),
         return {'task': task, "image": img_base64, 'prediction': pred}
 
     elif task == 'segmentation':
-        preds = {}
-        for ann in anns['shapes']:
+        
+        npz_file = osp.splitext(img_file)[0] + '.npz'
+        assert osp.exists(npz_file), ValueError(f"There is no such npz_file: {npz_file}")
 
-            if len(ann['points']) != 0:
-                print(">>>>>> ", ann['points'])
-                _channel = np.zeros((height, width))
-                arr = np.array(ann['points'], dtype=np.int32)
-                cv2.fillPoly(_channel, [arr], color=(conf))
-                
-                scaled_channel = cv2.resize(copy.deepcopy(_channel), (scaled_width, scaled_height))
-                __channel = (np.stack([scaled_channel, scaled_channel, scaled_channel, np.ones((scaled_height, scaled_width))],
+        img = cv2.imread(img_file)
+        height, width, channel = img.shape
+        print("1111. img.shape: ", img.shape)
+        scaled_height, scaled_width, scaled_channel = int(height*ratio), int(width*ratio), int(channel*ratio)
+        scaled_img = cv2.resize(copy.deepcopy(img), (scaled_width, scaled_height))
+        print("2222. scaled_img.shape: ", scaled_img.shape)
+        img_encoded = cv2.imencode('.jpg', scaled_img)[1]  # 이미지를 JPEG 형식으로 인코딩
+        img_base64 = base64.b64encode(img_encoded).decode('utf-8')
+        
+        loaded_data = np.load(npz_file)
+        loaded_arr = loaded_data['arr']
+        print("3333. loaded_arr.shape: ", loaded_arr.shape)
+        
+        preds = {}
+        for ch in range(loaded_arr.shape[-1]):
+            _channel = loaded_arr[:, :, ch]
+            scaled_channel = cv2.resize(copy.deepcopy(_channel), (scaled_width, scaled_height))
+            __channel = (np.stack([scaled_channel, scaled_channel, scaled_channel, np.ones((scaled_height, scaled_width))],
                                     axis=-1)*255).astype(np.uint8)
 
-                preds.update({ann['label']: __channel})
+            preds.update({ch: __channel})
             
         return {"status": f"Image ({scaled_img.shape}) uploaded successfully",
                 'image': img_base64,
                 'prediction': encode_image(preds),
                 "shape": {"height": scaled_img.shape[0], "width": scaled_img.shape[1], "channel": scaled_img.shape[2]},
                 'ratio': ratio}
-
-    # if img is not None:
-    #     return {"status": f"Image ({img.size}) uploaded successfully",
-    #             "task": 'segmentation',
-    #             "prediction": encode_image(preds),
-    #             "shape": {"height": img.size[0], "width": img.size[1], "channel": 3}}
-    # else:
-    #     return {"status": "Failed to upload Image", 'task': 'segmentation', 'prediction': None, 'shape': None}
-
-
-
 
 # @app.get("/get-image/")
 # async def get_image(ratio: float = Query(...), 
